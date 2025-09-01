@@ -8,7 +8,10 @@ export default function ResetPasswordPage() {
         <div className="w-full max-w-md">
           {/* Header Section */}
           <div className="mb-8">
-            <div className="flex items-center space-x-3 mb-6">
+            <Link
+              href="/"
+              className="flex items-center space-x-3 mb-6 hover:opacity-80 transition-opacity"
+            >
               <div className="w-8 h-8 rounded-lg overflow-hidden bg-purple-100 p-1.5">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -20,7 +23,7 @@ export default function ResetPasswordPage() {
               <span className="text-lg font-bold text-purple-900">
                 ZoomStore
               </span>
-            </div>
+            </Link>
 
             <div>
               <h1 className="text-2xl font-bold text-purple-900 mb-2">
