@@ -20,16 +20,16 @@ export default function ResetPasswordPage() {
                   className="h-full w-full object-contain"
                 />
               </div>
-              <span className="text-lg font-bold text-purple-900">
+              <span className="text-xl font-bold text-purple-900">
                 ZoomStore
               </span>
             </Link>
 
             <div>
-              <h1 className="text-2xl font-bold text-purple-900 mb-2">
+              <h1 className="text-3xl font-bold text-purple-900 mb-2">
                 Reset Password
               </h1>
-              <p className="text-sm text-purple-600">
+              <p className="text-base text-purple-600">
                 Enter your email and we'll send you a reset link
               </p>
             </div>
@@ -41,7 +41,7 @@ export default function ResetPasswordPage() {
               <div className="space-y-1.5">
                 <label
                   htmlFor="email"
-                  className="text-xs font-medium text-purple-800"
+                  className="text-sm font-medium text-purple-800"
                 >
                   Email Address
                 </label>
@@ -49,13 +49,13 @@ export default function ResetPasswordPage() {
                   id="email"
                   type="email"
                   placeholder="Enter your email"
-                  className="h-9 w-full rounded-md border border-purple-200 px-3 py-2 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-100 outline-none text-purple-900 placeholder-purple-400"
+                  className="h-10 w-full rounded-md border border-purple-200 px-3 py-2 text-base focus:border-purple-500 focus:ring-1 focus:ring-purple-100 outline-none text-purple-900 placeholder-purple-400"
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full h-9 rounded-md bg-purple-900 hover:bg-purple-800 text-white text-sm font-medium transition-colors"
+                className="w-full h-10 rounded-md bg-purple-900 hover:bg-purple-800 text-white text-base font-medium transition-colors"
               >
                 Send Reset Link
               </button>
@@ -63,7 +63,7 @@ export default function ResetPasswordPage() {
 
             {/* Back to Login Link */}
             <div className="text-center mt-4">
-              <p className="text-xs text-purple-600">
+              <p className="text-sm text-purple-600">
                 Remember your password?{" "}
                 <Link
                   href="/login"

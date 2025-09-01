@@ -21,16 +21,16 @@ export default function RegisterPage() {
                   className="h-full w-full object-contain"
                 />
               </div>
-              <span className="text-lg font-bold text-purple-900">
+              <span className="text-xl font-bold text-purple-900">
                 ZoomStore
               </span>
             </Link>
 
             <div>
-              <h1 className="text-2xl font-bold text-purple-900 mb-2">
+              <h1 className="text-3xl font-bold text-purple-900 mb-2">
                 Create Account
               </h1>
-              <p className="text-sm text-purple-600">
+              <p className="text-base text-purple-600">
                 Join ZoomStore to start shopping with us
               </p>
             </div>
@@ -43,7 +43,7 @@ export default function RegisterPage() {
                 <div className="space-y-1.5">
                   <label
                     htmlFor="firstName"
-                    className="text-xs font-medium text-purple-800"
+                    className="text-sm font-medium text-purple-800"
                   >
                     First Name
                   </label>
@@ -51,14 +51,14 @@ export default function RegisterPage() {
                     id="firstName"
                     type="text"
                     placeholder="First name"
-                    className="h-9 w-full rounded-md border border-purple-200 px-3 py-2 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-100 outline-none text-purple-900 placeholder-purple-400"
+                    className="h-10 w-full rounded-md border border-purple-200 px-3 py-2 text-base focus:border-purple-500 focus:ring-1 focus:ring-purple-100 outline-none text-purple-900 placeholder-purple-400"
                   />
                 </div>
 
                 <div className="space-y-1.5">
                   <label
                     htmlFor="lastName"
-                    className="text-xs font-medium text-purple-800"
+                    className="text-sm font-medium text-purple-800"
                   >
                     Last Name
                   </label>
@@ -66,7 +66,7 @@ export default function RegisterPage() {
                     id="lastName"
                     type="text"
                     placeholder="Last name"
-                    className="h-9 w-full rounded-md border border-purple-200 px-3 py-2 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-100 outline-none text-purple-900 placeholder-purple-400"
+                    className="h-10 w-full rounded-md border border-purple-200 px-3 py-2 text-base focus:border-purple-500 focus:ring-1 focus:ring-purple-100 outline-none text-purple-900 placeholder-purple-400"
                   />
                 </div>
               </div>
@@ -74,7 +74,7 @@ export default function RegisterPage() {
               <div className="space-y-1.5">
                 <label
                   htmlFor="email"
-                  className="text-xs font-medium text-purple-800"
+                  className="text-sm font-medium text-purple-800"
                 >
                   Email Address
                 </label>
@@ -82,14 +82,14 @@ export default function RegisterPage() {
                   id="email"
                   type="email"
                   placeholder="Enter your email address"
-                  className="h-9 w-full rounded-md border border-purple-200 px-3 py-2 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-100 outline-none text-purple-900 placeholder-purple-400"
+                  className="h-10 w-full rounded-md border border-purple-200 px-3 py-2 text-base focus:border-purple-500 focus:ring-1 focus:ring-purple-100 outline-none text-purple-900 placeholder-purple-400"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label
                   htmlFor="password"
-                  className="text-xs font-medium text-purple-800"
+                  className="text-sm font-medium text-purple-800"
                 >
                   Password
                 </label>
@@ -97,14 +97,14 @@ export default function RegisterPage() {
                   id="password"
                   type="password"
                   placeholder="Create a strong password"
-                  className="h-9 w-full rounded-md border border-purple-200 px-3 py-2 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-100 outline-none text-purple-900 placeholder-purple-400"
+                  className="h-10 w-full rounded-md border border-purple-200 px-3 py-2 text-base focus:border-purple-500 focus:ring-1 focus:ring-purple-100 outline-none text-purple-900 placeholder-purple-400"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label
                   htmlFor="confirmPassword"
-                  className="text-xs font-medium text-purple-800"
+                  className="text-sm font-medium text-purple-800"
                 >
                   Confirm Password
                 </label>
@@ -112,7 +112,7 @@ export default function RegisterPage() {
                   id="confirmPassword"
                   type="password"
                   placeholder="Confirm your password"
-                  className="h-9 w-full rounded-md border border-purple-200 px-3 py-2 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-100 outline-none text-purple-900 placeholder-purple-400"
+                  className="h-10 w-full rounded-md border border-purple-200 px-3 py-2 text-base focus:border-purple-500 focus:ring-1 focus:ring-purple-100 outline-none text-purple-900 placeholder-purple-400"
                 />
               </div>
 
@@ -124,7 +124,7 @@ export default function RegisterPage() {
                 />
                 <label
                   htmlFor="terms"
-                  className="text-xs text-purple-700 leading-relaxed"
+                  className="text-sm text-purple-700 leading-relaxed"
                 >
                   I agree to the{" "}
                   <a
@@ -145,7 +145,7 @@ export default function RegisterPage() {
 
               <button
                 type="submit"
-                className="w-full h-9 rounded-md bg-purple-900 hover:bg-purple-800 text-white text-sm font-medium transition-colors"
+                className="w-full h-10 rounded-md bg-purple-900 hover:bg-purple-800 text-white text-base font-medium transition-colors"
               >
                 Create Account
               </button>
@@ -153,7 +153,7 @@ export default function RegisterPage() {
 
             {/* Sign In Link */}
             <div className="text-center mt-4">
-              <p className="text-xs text-purple-600">
+              <p className="text-sm text-purple-600">
                 Already have a ZoomStore account?{" "}
                 <a
                   href="/login"

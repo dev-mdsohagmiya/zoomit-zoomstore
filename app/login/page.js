@@ -22,16 +22,16 @@ export default function LoginPage() {
                   className="h-full w-full object-contain"
                 />
               </div>
-              <span className="text-lg font-bold text-purple-900">
+              <span className="text-xl font-bold text-purple-900">
                 ZoomStore
               </span>
             </Link>
 
             <div>
-              <h1 className="text-2xl font-bold text-purple-900 mb-2">
+              <h1 className="text-3xl font-bold text-purple-900 mb-2">
                 Welcome Back
               </h1>
-              <p className="text-sm text-purple-600">
+              <p className="text-base text-purple-600">
                 Sign in to your account to continue shopping
               </p>
             </div>
@@ -43,7 +43,7 @@ export default function LoginPage() {
               <div className="space-y-1.5">
                 <label
                   htmlFor="email"
-                  className="text-xs font-medium text-purple-800"
+                  className="text-sm font-medium text-purple-800"
                 >
                   Email Address
                 </label>
@@ -52,14 +52,14 @@ export default function LoginPage() {
                   id="email"
                   type="email"
                   placeholder="Enter your email"
-                  className="h-9 w-full rounded-md border border-purple-200 px-3 py-2 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-100 outline-none text-purple-900 placeholder-purple-400"
+                  className="h-10 w-full rounded-md border border-purple-200 px-3 py-2 text-base focus:border-purple-500 focus:ring-1 focus:ring-purple-100 outline-none text-purple-900 placeholder-purple-400"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label
                   htmlFor="password"
-                  className="text-xs font-medium text-purple-800"
+                  className="text-sm font-medium text-purple-800"
                 >
                   Password
                 </label>
@@ -69,11 +69,11 @@ export default function LoginPage() {
                     id="password"
                     type="password"
                     placeholder="Enter your password"
-                    className="h-9 w-full rounded-md border border-purple-200 px-3 py-2 pr-8 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-100 outline-none text-purple-900 placeholder-purple-400"
+                    className="h-10 w-full rounded-md border border-purple-200 px-3 py-2 pr-8 text-base focus:border-purple-500 focus:ring-1 focus:ring-purple-100 outline-none text-purple-900 placeholder-purple-400"
                   />
                   <button
                     type="button"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-purple-400 hover:text-purple-600 transition-colors text-sm"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-purple-400 hover:text-purple-600 transition-colors text-base"
                   >
                     👁️
                   </button>
@@ -90,13 +90,13 @@ export default function LoginPage() {
                     type="checkbox"
                     className="h-4 w-4 rounded border border-purple-300 text-purple-600 focus:ring-purple-500 focus:ring-1"
                   />
-                  <span className="text-xs font-medium text-purple-700">
+                  <span className="text-sm font-medium text-purple-700">
                     Remember Me
                   </span>
                 </label>
                 <a
                   href="/reset-password"
-                  className="text-xs font-medium text-purple-600 hover:text-purple-800 hover:underline transition-colors"
+                  className="text-sm font-medium text-purple-600 hover:text-purple-800 hover:underline transition-colors"
                 >
                   Forgot Password?
                 </a>
@@ -104,7 +104,7 @@ export default function LoginPage() {
 
               <button
                 type="submit"
-                className="w-full h-9 rounded-md bg-purple-900 hover:bg-purple-800 text-white text-sm font-medium transition-colors"
+                className="w-full h-10 rounded-md bg-purple-900 hover:bg-purple-800 text-white text-base font-medium transition-colors"
               >
                 Sign In
               </button>
@@ -113,7 +113,7 @@ export default function LoginPage() {
             {/* Divider */}
             <div className="my-6 flex items-center">
               <div className="flex-1 border-t border-purple-200"></div>
-              <span className="px-3 text-xs text-purple-500 font-medium">
+              <span className="px-3 text-sm text-purple-500 font-medium">
                 Or continue with
               </span>
               <div className="flex-1 border-t border-purple-200"></div>
@@ -126,7 +126,7 @@ export default function LoginPage() {
 
             {/* Sign Up Link */}
             <div className="text-center mt-4">
-              <p className="text-xs text-purple-600">
+              <p className="text-sm text-purple-600">
                 New to ZoomStore?{" "}
                 <a
                   href="/register"
