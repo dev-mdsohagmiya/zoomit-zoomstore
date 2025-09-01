@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShoppingBag, ShoppingCart } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import CartModal from "./CartModal";
 
 export default function Navbar() {
@@ -9,14 +9,15 @@ export default function Navbar() {
   const linkClass = (href) =>
     `px-3 py-2 rounded-md text-sm transition-colors ${
       pathname === href
-        ? "bg-slate-900 text-white"
-        : "text-slate-700 hover:bg-slate-100"
+        ? "bg-purple-900 text-white"
+        : "text-purple-900 hover:bg-purple-100"
     }`;
+
   // Temporary auth flag. Replace with real auth state.
   const isLoggedIn = false;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-purple-200 bg-white/90 backdrop-blur">
       <div className="h-16">
         <div className="mx-auto h-full max-w-6xl px-4 sm:px-6 flex items-center justify-between">
           {/* Brand */}
@@ -29,7 +30,7 @@ export default function Navbar() {
                 className="h-full w-full object-contain"
               />
             </div>
-            <span className="text-lg font-semibold text-slate-900">
+            <span className="text-lg font-semibold text-purple-900">
               ZoomStore
             </span>
           </Link>
@@ -50,7 +51,7 @@ export default function Navbar() {
           <div className="flex items-center gap-3">
             <CartModal
               trigger={
-                <button className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                <button className="inline-flex items-center gap-2 rounded-md border border-purple-300 px-3 py-2 text-sm text-purple-900 hover:bg-purple-50">
                   <ShoppingCart className="h-4 w-4" />
                   Cart
                 </button>
@@ -58,7 +59,7 @@ export default function Navbar() {
             />
             {isLoggedIn ? (
               <Link href="/profile" className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full overflow-hidden ring-1 ring-slate-200">
+                <div className="w-9 h-9 rounded-full overflow-hidden ring-1 ring-purple-200">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     alt="Profile"
@@ -70,12 +71,12 @@ export default function Navbar() {
             ) : (
               <div className="hidden sm:flex items-center gap-2">
                 <Link href="/login">
-                  <button className="h-9 rounded-md border border-slate-300 px-3 text-sm text-slate-700 hover:bg-slate-50">
+                  <button className="h-9 rounded-md border border-purple-300 px-3 text-sm text-purple-900 hover:bg-purple-50">
                     Sign In
                   </button>
                 </Link>
                 <Link href="/register">
-                  <button className="h-9 rounded-md bg-slate-900 px-3 text-sm text-white hover:bg-slate-800">
+                  <button className="h-9 rounded-md bg-purple-900 px-3 text-sm text-white hover:bg-purple-800">
                     Register
                   </button>
                 </Link>
