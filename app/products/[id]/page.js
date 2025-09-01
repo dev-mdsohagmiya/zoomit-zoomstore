@@ -1,4 +1,4 @@
-import CartModal from "../../../components/ui/CartModal";
+import CenteredCartModal from "../../../components/ui/CenteredCartModal";
 import Link from "next/link";
 import { Star, Heart, Truck, Shield, ArrowLeft } from "lucide-react";
 
@@ -246,7 +246,7 @@ export default function ProductDetailPage() {
                 <button className="h-12 flex-1 rounded-lg bg-purple-900 text-white font-semibold hover:bg-purple-800 transition-colors">
                   Add to Cart
                 </button>
-                <CartModal
+                <CenteredCartModal
                   trigger={
                     <button className="h-12 px-6 rounded-lg border-2 border-purple-300 text-purple-700 font-semibold hover:bg-purple-50 transition-colors">
                       View Cart

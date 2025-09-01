@@ -3,14 +3,14 @@ import * as Dialog from "@radix-ui/react-dialog";
 import Link from "next/link";
 import { X, ShoppingCart, Minus, Plus, Trash2 } from "lucide-react";
 
-export default function CartModal({ trigger }) {
+export default function CenteredCartModal({ trigger }) {
   return (
     <Dialog.Root>
       <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0" />
-        <Dialog.Content className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl border-l border-purple-200 focus:outline-none z-50 data-[state=open]:animate-in data-[state=open]:slide-in-from-right data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right">
-          <div className="flex items-center justify-between border-b border-purple-200 p-6 bg-gradient-to-r from-purple-50 to-white">
+        <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl max-h-[90vh] bg-white shadow-2xl border border-purple-200 rounded-2xl focus:outline-none z-50 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95">
+          <div className="flex items-center justify-between border-b border-purple-200 p-6 bg-gradient-to-r from-purple-50 to-white rounded-t-2xl">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-purple-900 flex items-center justify-center shadow-lg">
                 <ShoppingCart className="w-5 h-5 text-white" />
@@ -27,7 +27,7 @@ export default function CartModal({ trigger }) {
             </Dialog.Close>
           </div>
 
-          <div className="h-[calc(100%-240px)] overflow-y-auto p-6 space-y-4 custom-scrollbar">
+          <div className="max-h-[50vh] overflow-y-auto p-6 space-y-4 custom-scrollbar">
             {/* Cart Item 1 */}
             <div className="flex gap-4 rounded-xl border border-purple-200 p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
               <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-purple-50">
@@ -206,7 +206,7 @@ export default function CartModal({ trigger }) {
             </div>
           </div>
 
-          <div className="border-t border-purple-200 p-6 bg-gradient-to-r from-purple-50 to-white space-y-4">
+          <div className="border-t border-purple-200 p-6 bg-gradient-to-r from-purple-50 to-white space-y-4 rounded-b-2xl">
             <div className="space-y-3">
               <div className="flex items-center justify-between text-sm text-purple-700">
                 <span>Subtotal (3 items)</span>
@@ -226,12 +226,12 @@ export default function CartModal({ trigger }) {
 
             <div className="flex gap-3 pt-2">
               <Dialog.Close asChild>
-                <button className="h-12 flex-1 rounded-xl border-2 border-purple-300 text-purple-700 font-medium hover:bg-purple-50 transition-colors">
+                <button className="h-12 flex-1 rounded-lg border-2 border-purple-300 text-purple-700 font-medium hover:bg-purple-50 transition-colors">
                   Continue Shopping
                 </button>
               </Dialog.Close>
               <Link href="/checkout" className="flex-1">
-                <button className="h-12 w-full rounded-xl bg-purple-900 text-white font-semibold hover:bg-purple-800 transition-colors shadow-lg">
+                <button className="h-12 w-full rounded-lg bg-purple-900 text-white font-semibold hover:bg-purple-800 transition-colors shadow-lg">
                   Proceed to Checkout
                 </button>
               </Link>

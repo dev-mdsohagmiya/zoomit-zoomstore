@@ -120,3 +120,85 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom Scrollbar Styles - Purple Theme */
+@layer utilities {
+  /* Webkit browsers (Chrome, Safari, Edge) */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgb(244, 234, 244);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgb(146, 40, 142);
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgb(120, 30, 115);
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: rgb(244, 234, 244);
+  }
+
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(146, 40, 142) rgb(244, 234, 244);
+  }
+
+  /* Custom scrollbar for specific elements */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(146, 40, 142) rgb(244, 234, 244);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgb(244, 234, 244);
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgb(146, 40, 142);
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgb(120, 30, 115);
+  }
+
+  /* Light scrollbar variant */
+  .light-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(196, 181, 253) rgb(244, 234, 244);
+  }
+
+  .light-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .light-scrollbar::-webkit-scrollbar-track {
+    background: rgb(244, 234, 244);
+    border-radius: 3px;
+  }
+
+  .light-scrollbar::-webkit-scrollbar-thumb {
+    background: rgb(196, 181, 253);
+    border-radius: 3px;
+  }
+
+  .light-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgb(146, 40, 142);
+  }
+}
