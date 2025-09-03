@@ -5,9 +5,10 @@ import Navbar from "./Navbar";
 export default function NavbarWrapper() {
   const pathname = usePathname();
 
-  // Don't show navbar on auth pages
+  // Don't show navbar on auth pages and admin pages
   const authPages = ["/login", "/register", "/reset-password"];
-  const shouldShowNavbar = !authPages.includes(pathname);
+  const isAdminPage = pathname.startsWith("/admin");
+  const shouldShowNavbar = !authPages.includes(pathname) && !isAdminPage;
 
   if (!shouldShowNavbar) {
     return null;

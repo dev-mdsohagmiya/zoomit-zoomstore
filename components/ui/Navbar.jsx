@@ -7,7 +7,7 @@ import CartModal from "./CartModal";
 export default function Navbar() {
   const pathname = usePathname();
   const linkClass = (href) =>
-    `px-3 py-2 rounded-md text-sm transition-colors ${
+    `px-3 py-2 rounded-md text-sm font-body font-medium transition-colors ${
       pathname === href
         ? "bg-purple-900 text-white"
         : "text-purple-900 hover:bg-purple-100"
@@ -30,7 +30,7 @@ export default function Navbar() {
                 className="h-full w-full object-contain"
               />
             </div>
-            <span className="text-lg font-semibold text-purple-900">
+            <span className="text-lg font-display font-semibold text-purple-900">
               ZoomStore
             </span>
           </Link>
@@ -43,15 +43,12 @@ export default function Navbar() {
             <Link href="/products" className={linkClass("/products")}>
               Products
             </Link>
-            <Link href="/admin" className={linkClass("/admin")}>
-              Admin
-            </Link>
           </nav>
 
           <div className="flex items-center gap-3">
             <CartModal
               trigger={
-                <button className="inline-flex items-center gap-2 rounded-md border border-purple-300 px-3 py-2 text-sm text-purple-900 hover:bg-purple-50">
+                <button className="inline-flex items-center gap-2 rounded-md border border-purple-300 px-3 py-2 text-sm font-body font-medium text-purple-900 hover:bg-purple-50">
                   <ShoppingCart className="h-4 w-4" />
                   Cart
                 </button>
@@ -71,12 +68,12 @@ export default function Navbar() {
             ) : (
               <div className="hidden sm:flex items-center gap-2">
                 <Link href="/login">
-                  <button className="h-9 rounded-md border border-purple-300 px-3 text-sm text-purple-900 hover:bg-purple-50">
+                  <button className="h-9 rounded-md border border-purple-300 px-3 text-sm font-body font-medium text-purple-900 hover:bg-purple-50">
                     Sign In
                   </button>
                 </Link>
                 <Link href="/register">
-                  <button className="h-9 rounded-md bg-purple-900 px-3 text-sm text-white hover:bg-purple-800">
+                  <button className="h-9 rounded-md bg-purple-900 px-3 text-sm font-body font-medium text-white hover:bg-purple-800">
                     Register
                   </button>
                 </Link>
