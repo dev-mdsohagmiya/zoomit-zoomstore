@@ -1,5 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Upload, Package } from "lucide-react";
+import { showErrorToast } from "../../lib/toast-utils";
 import {
   Dialog,
   DialogContent,
@@ -9,110 +14,202 @@ import {
 } from "./dialog";
 import { Button } from "./button";
 import { Input } from "./input";
+import { Label } from "./label";
+
+// Validation schema
+const categorySchema = z.object({
+  name: z
+    .string()
+    .min(1, "Category name is required")
+    .min(2, "Category name must be at least 2 characters"),
+});
 
 export default function CategoryModal({
   isOpen,
   onClose,
-  onSave,
+  onSubmit,
   category,
-  mode = "add",
+  title,
 }) {
-  const [formData, setFormData] = useState({
-    name: "",
+  const [imagePreview, setImagePreview] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    setValue,
+    watch,
+  } = useForm({
+    resolver: zodResolver(categorySchema),
+    defaultValues: {
+      name: "",
+    },
   });
-  const [isLoading, setIsLoading] = useState(false);
 
+  // Reset form when modal opens/closes or category changes
   useEffect(() => {
-    if (category && mode === "edit") {
-      setFormData({
-        name: category.name || "",
-      });
+    if (isOpen) {
+      if (category) {
+        setValue("name", category.name || "");
+        setImagePreview(category.image || null);
+        setSelectedFile(null);
+      } else {
+        reset();
+        setImagePreview(null);
+        setSelectedFile(null);
+      }
     } else {
-      setFormData({
-        name: "",
-      });
+      reset();
+      setImagePreview(null);
+      setSelectedFile(null);
     }
-  }, [category, mode]);
+  }, [isOpen, category, setValue, reset]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Check file size (5MB limit)
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      if (file.size > maxSize) {
+        showErrorToast("File size must be less than 5MB");
+        e.target.value = ""; // Clear the input
+        setSelectedFile(null);
+        return;
+      }
 
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Check file type
+      const allowedTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+      ];
+      if (!allowedTypes.includes(file.type)) {
+        showErrorToast(
+          "Please select a valid image file (JPG, PNG, GIF, or WebP)"
+        );
+        e.target.value = ""; // Clear the input
+        setSelectedFile(null);
+        return;
+      }
 
-      const categoryData = {
-        ...(mode === "edit" ? category : {}),
-        ...formData,
-        id: mode === "edit" ? category.id : Date.now(),
-        slug: formData.name.toLowerCase().replace(/\s+/g, "-"),
+      // Store the selected file
+      setSelectedFile(file);
+
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target.result);
       };
+      reader.readAsDataURL(file);
+    } else {
+      setImagePreview(null);
+      setSelectedFile(null);
+    }
+  };
 
-      onSave(categoryData);
-      handleClose();
+  const handleFormSubmit = async (data) => {
+    setIsSubmitting(true);
+    try {
+      // Include the selected file in the data
+      const formData = {
+        ...data,
+        image: selectedFile ? [selectedFile] : null,
+      };
+      await onSubmit(formData);
     } catch (error) {
-      console.error(
-        `Error ${mode === "edit" ? "updating" : "adding"} category:`,
-        error
-      );
+      console.error("Error submitting form:", error);
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   const handleClose = () => {
-    onClose();
-  };
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    if (!isSubmitting) {
+      onClose();
+    }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {mode === "edit" ? "Edit Category" : "Add New Category"}
-          </DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Category Name *
-            </label>
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+          {/* Category Name */}
+          <div className="space-y-2">
+            <Label htmlFor="name">Category Name *</Label>
             <Input
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
+              {...register("name")}
+              id="name"
+              type="text"
               placeholder="Enter category name"
-              required
+              className={errors.name ? "border-red-300" : ""}
+              disabled={isSubmitting}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Slug: {formData.name.toLowerCase().replace(/\s+/g, "-")}
-            </p>
+            {errors.name && (
+              <p className="text-sm text-red-600">{errors.name.message}</p>
+            )}
           </div>
 
-          {/* Category Preview */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h4 className="font-medium text-gray-900 mb-2">Preview:</h4>
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <span className="text-lg">
-                  {formData.name ? formData.name[0].toUpperCase() : "📦"}
-                </span>
-              </div>
-              <div>
-                <div className="font-medium text-gray-900">{formData.name}</div>
-                <div className="text-sm text-gray-500">
-                  {formData.name.toLowerCase().replace(/\s+/g, "-")}
+          {/* Category Image */}
+          <div className="space-y-2">
+            <Label>Category Image</Label>
+
+            {/* Image Preview */}
+            <div className="mb-3">
+              {imagePreview ? (
+                <div className="relative inline-block">
+                  <img
+                    src={imagePreview}
+                    alt="Category preview"
+                    className="h-20 w-20 rounded-lg object-cover border border-gray-300"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImagePreview(null);
+                      setSelectedFile(null);
+                    }}
+                    className="absolute -top-2 -right-2 h-5 w-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600"
+                    disabled={isSubmitting}
+                  >
+                    ×
+                  </button>
                 </div>
-              </div>
+              ) : (
+                <div className="h-20 w-20 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
+                  <Package className="h-8 w-8 text-gray-400" />
+                </div>
+              )}
+            </div>
+
+            {/* File Input */}
+            <div className="flex items-center space-x-2">
+              <Label
+                htmlFor="image"
+                className="flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Choose Image
+                <input
+                  id="image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                  disabled={isSubmitting}
+                />
+              </Label>
+              <span className="text-sm text-gray-500">
+                JPG, PNG, GIF, WebP (max 5MB)
+              </span>
             </div>
           </div>
 
@@ -121,22 +218,20 @@ export default function CategoryModal({
               type="button"
               variant="outline"
               onClick={handleClose}
-              disabled={isLoading}
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={isLoading}
+              disabled={isSubmitting}
               className="bg-purple-600 hover:bg-purple-700"
             >
-              {isLoading
-                ? mode === "edit"
-                  ? "Updating..."
-                  : "Adding..."
-                : mode === "edit"
+              {isSubmitting
+                ? "Saving..."
+                : category
                 ? "Update Category"
-                : "Add Category"}
+                : "Create Category"}
             </Button>
           </DialogFooter>
         </form>
@@ -144,4 +239,3 @@ export default function CategoryModal({
     </Dialog>
   );
 }
-
