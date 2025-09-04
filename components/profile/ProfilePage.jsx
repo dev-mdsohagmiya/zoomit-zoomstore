@@ -14,7 +14,7 @@ import {
   storeAuthData,
 } from "../../lib/auth-utils";
 import { showSuccessToast, showErrorToast } from "../../lib/toast-utils";
-import { updateUserProfile } from "../../app/actions/auth";
+// Remove server action import - we'll make direct API calls
 import {
   User,
   Mail,
@@ -27,6 +27,123 @@ import {
   Save,
   X,
 } from "lucide-react";
+
+// Client-side API function for profile updates
+const updateUserProfileAPI = async (formData, token) => {
+  console.log("updateUserProfileAPI called with:", {
+    formData,
+    token: !!token,
+  });
+
+  try {
+    if (!token) {
+      console.log("No token found");
+      return {
+        success: false,
+        error: "No authentication token found.",
+      };
+    }
+
+    // Create FormData for multipart/form-data request
+    const data = new FormData();
+
+    // Add fields if they exist and are not empty
+    if (formData.name && formData.name.trim()) {
+      data.append("name", formData.name.trim());
+    }
+
+    if (formData.email && formData.email.trim()) {
+      data.append("email", formData.email.trim());
+    }
+
+    // Add photo if provided
+    if (formData.photo && formData.photo.length > 0) {
+      data.append("photo", formData.photo[0]);
+    }
+
+    // Add address if provided
+    if (formData.address) {
+      const addressData = {};
+      if (formData.address.street) addressData.street = formData.address.street;
+      if (formData.address.city) addressData.city = formData.address.city;
+      if (formData.address.state) addressData.state = formData.address.state;
+      if (formData.address.zipCode)
+        addressData.zipCode = formData.address.zipCode;
+      if (formData.address.country)
+        addressData.country = formData.address.country;
+
+      // Only append address if it has at least one field
+      if (Object.keys(addressData).length > 0) {
+        data.append("address", JSON.stringify(addressData));
+      }
+    }
+
+    // Log FormData contents
+    console.log("FormData contents:");
+    for (let [key, value] of data.entries()) {
+      console.log(`${key}:`, value);
+    }
+
+    const response = await fetch("http://localhost:8000/api/v1/users/profile", {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        // Don't set Content-Type for FormData, let browser set it with boundary
+      },
+      body: data,
+    });
+
+    console.log("Response status:", response.status);
+    console.log("Response ok:", response.ok);
+
+    if (!response.ok) {
+      try {
+        const errorData = await response.json();
+        return {
+          success: false,
+          error: errorData.message || `HTTP error! status: ${response.status}`,
+        };
+      } catch (parseError) {
+        return {
+          success: false,
+          error: `HTTP error! status: ${response.status}`,
+        };
+      }
+    }
+
+    try {
+      const result = await response.json();
+      console.log("Success response:", result);
+      return {
+        success: true,
+        data: result.data,
+        message: result.message || "Profile updated successfully!",
+      };
+    } catch (parseError) {
+      console.error("Error parsing response:", parseError);
+      return {
+        success: false,
+        error: "Invalid response from server. Please try again.",
+      };
+    }
+  } catch (error) {
+    console.error("Profile update error:", error);
+
+    // Check if it's a network error
+    if (error.name === "TypeError" && error.message.includes("fetch")) {
+      return {
+        success: false,
+        error: "Network error. Please check your connection and try again.",
+      };
+    }
+
+    // For other errors, show a more generic message
+    return {
+      success: false,
+      error: "An unexpected error occurred. Please try again.",
+    };
+  }
+};
 
 // Validation schema for profile update
 const profileSchema = z.object({
@@ -155,6 +272,27 @@ export default function ProfilePage() {
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Check file size (5MB limit)
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      if (file.size > maxSize) {
+        showErrorToast("File size must be less than 5MB");
+        e.target.value = ""; // Clear the input
+        return;
+      }
+
+      // Check file type
+      const allowedTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/gif",
+      ];
+      if (!allowedTypes.includes(file.type)) {
+        showErrorToast("Please select a valid image file (JPG, PNG, or GIF)");
+        e.target.value = ""; // Clear the input
+        return;
+      }
+
       // Create preview URL
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -176,8 +314,13 @@ export default function ProfilePage() {
         return;
       }
 
-      // Call the server action to update profile
-      const result = await updateUserProfile(data, token);
+      console.log("Starting profile update with data:", data);
+      console.log("Token available:", !!token);
+
+      // Call the client-side API to update profile
+      const result = await updateUserProfileAPI(data, token);
+
+      console.log("API result:", result);
 
       if (result.success) {
         // Update local user data with the response from server
@@ -190,12 +333,13 @@ export default function ProfilePage() {
         showSuccessToast(result.message || "Profile updated successfully!");
         setIsEditing(false);
       } else {
+        console.log("API returned error:", result.error);
         showErrorToast(
           result.error || "Failed to update profile. Please try again."
         );
       }
     } catch (error) {
-      console.error("Profile update error:", error);
+      console.error("Profile update error in onSubmit:", error);
       showErrorToast("An unexpected error occurred. Please try again.");
     } finally {
       setIsSaving(false);
