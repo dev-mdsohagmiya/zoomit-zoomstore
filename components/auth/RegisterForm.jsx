@@ -50,7 +50,7 @@ export default function RegisterForm() {
           const userRole = result.data.user?.role;
           setTimeout(() => {
             if (userRole === "admin" || userRole === "superadmin") {
-              router.push("/admin");
+              router.push("/admin/dashboard");
             } else {
               router.push("/");
             }

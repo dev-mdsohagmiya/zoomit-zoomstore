@@ -1,11 +1,22 @@
 "use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ShoppingCart } from "lucide-react";
 import CartModal from "./CartModal";
+import {
+  isAuthenticated,
+  getUserRole,
+  getStoredUser,
+} from "../../lib/auth-utils";
 
 export default function Navbar() {
   const pathname = usePathname();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState(null);
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
   const linkClass = (href) =>
     `px-3 py-2 rounded-md text-sm font-body font-medium transition-colors ${
       pathname === href
@@ -13,8 +24,32 @@ export default function Navbar() {
         : "text-purple-900 hover:bg-purple-100"
     }`;
 
-  // Temporary auth flag. Replace with real auth state.
-  const isLoggedIn = false;
+  useEffect(() => {
+    // Check authentication status on component mount
+    const checkAuthStatus = () => {
+      const authenticated = isAuthenticated();
+      const role = getUserRole();
+      const userData = getStoredUser();
+
+      setIsLoggedIn(authenticated);
+      setUserRole(role);
+      setUser(userData);
+      setIsLoading(false);
+    };
+
+    checkAuthStatus();
+
+    // Listen for storage changes (when user logs in/out in another tab)
+    const handleStorageChange = () => {
+      checkAuthStatus();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
 
   return (
     <header className="sticky top-0 z-40 border-b border-purple-200 bg-white/90 backdrop-blur">
@@ -54,17 +89,42 @@ export default function Navbar() {
                 </button>
               }
             />
-            {isLoggedIn ? (
-              <Link href="/profile" className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full overflow-hidden ring-1 ring-purple-200">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    alt="Profile"
-                    src="https://i.pravatar.cc/80?img=12"
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-              </Link>
+
+            {isLoading ? (
+              <div className="w-9 h-9 rounded-full bg-purple-100 animate-pulse"></div>
+            ) : isLoggedIn ? (
+              <div className="flex items-center gap-3">
+                {/* Admin Panel Link for Admin Users */}
+                {(userRole === "admin" || userRole === "superadmin") && (
+                  <Link href="/admin/dashboard">
+                    <button className="h-9 rounded-md border border-purple-300 px-3 text-sm font-body font-medium text-purple-900 hover:bg-purple-50">
+                      Admin Panel
+                    </button>
+                  </Link>
+                )}
+
+                {/* User Profile */}
+                <Link href="/profile" className="flex items-center gap-2">
+                  <div className="w-9 h-9 rounded-full overflow-hidden ring-1 ring-purple-200">
+                    {user?.photo ? (
+                      <img
+                        alt="Profile"
+                        src={user.photo}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-full w-full bg-purple-100 flex items-center justify-center">
+                        <span className="text-purple-600 text-sm font-medium">
+                          {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <span className="hidden sm:block text-sm font-medium text-purple-900">
+                    {user?.name || "User"}
+                  </span>
+                </Link>
+              </div>
             ) : (
               <div className="hidden sm:flex items-center gap-2">
                 <Link href="/login">
