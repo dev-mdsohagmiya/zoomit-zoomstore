@@ -1,48 +1,25 @@
 "use client";
-import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, Eye, Package } from "lucide-react";
+import { useState } from "react";
+import { Plus, Edit, Trash2, Package } from "lucide-react";
 import { getStoredToken } from "../../lib/auth-utils";
 import { showSuccessToast, showErrorToast } from "../../lib/toast-utils";
+import {
+  createCategory,
+  updateCategory,
+  deleteCategory,
+} from "../../app/actions/category";
 import CategoryModal from "../ui/CategoryModal";
 import DeleteConfirmModal from "../ui/DeleteConfirmModal";
 
-const BASE_URL = "http://localhost:8000/api/v1";
-
-export default function CategoriesPage() {
-  const [categories, setCategories] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+export default function CategoriesPageClient({ initialCategories }) {
+  const [categories, setCategories] = useState(initialCategories);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
 
-  // Fetch categories
-  const fetchCategories = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(`${BASE_URL}/categories`);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-
-      if (result.sucess) {
-        setCategories(result.data || []);
-      } else {
-        showErrorToast(result.message || "Failed to fetch categories");
-      }
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-      showErrorToast("Failed to fetch categories. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Create category
-  const createCategory = async (categoryData) => {
+  // Create category using server action
+  const handleCreateCategory = async (categoryData) => {
     try {
       const token = getStoredToken();
       if (!token) {
@@ -50,41 +27,23 @@ export default function CategoriesPage() {
         return;
       }
 
-      console.log("Creating category with data:", categoryData);
-
+      // Create FormData for the server action
       const formData = new FormData();
       formData.append("name", categoryData.name);
 
       if (categoryData.image && categoryData.image.length > 0) {
-        console.log("Adding image to FormData:", categoryData.image[0]);
         formData.append("image", categoryData.image[0]);
-      } else {
-        console.log("No image to upload");
       }
 
-      // Log FormData contents
-      console.log("FormData contents:");
-      for (let [key, value] of formData.entries()) {
-        console.log(`${key}:`, value);
-      }
+      const result = await createCategory(formData, token);
 
-      const response = await fetch(`${BASE_URL}/categories`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      const result = await response.json();
-      console.log("API response:", result);
-
-      if (result.sucess) {
-        showSuccessToast(result.message || "Category created successfully!");
-        await fetchCategories();
+      if (result.success) {
+        showSuccessToast(result.message);
+        // Add the new category to the top of the list (latest first)
+        setCategories((prev) => [result.data, ...prev]);
         setIsModalOpen(false);
       } else {
-        showErrorToast(result.message || "Failed to create category");
+        showErrorToast(result.error);
       }
     } catch (error) {
       console.error("Error creating category:", error);
@@ -92,8 +51,8 @@ export default function CategoriesPage() {
     }
   };
 
-  // Update category
-  const updateCategory = async (categoryData) => {
+  // Update category using server action
+  const handleUpdateCategory = async (categoryData) => {
     try {
       const token = getStoredToken();
       if (!token) {
@@ -101,45 +60,32 @@ export default function CategoriesPage() {
         return;
       }
 
-      console.log("Updating category with data:", categoryData);
-
+      // Create FormData for the server action
       const formData = new FormData();
       formData.append("name", categoryData.name);
 
       if (categoryData.image && categoryData.image.length > 0) {
-        console.log("Adding image to FormData:", categoryData.image[0]);
         formData.append("image", categoryData.image[0]);
-      } else {
-        console.log("No image to upload");
       }
 
-      // Log FormData contents
-      console.log("FormData contents:");
-      for (let [key, value] of formData.entries()) {
-        console.log(`${key}:`, value);
-      }
+      const result = await updateCategory(editingCategory._id, formData, token);
 
-      const response = await fetch(
-        `${BASE_URL}/categories/${editingCategory._id}`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        }
-      );
-
-      const result = await response.json();
-      console.log("API response:", result);
-
-      if (result.sucess) {
-        showSuccessToast(result.message || "Category updated successfully!");
-        await fetchCategories();
+      if (result.success) {
+        showSuccessToast(result.message);
+        // Update the category in the list and maintain sorting
+        setCategories((prev) => {
+          const updated = prev.map((cat) =>
+            cat._id === editingCategory._id ? result.data : cat
+          );
+          // Re-sort by creation date (latest first) to maintain order
+          return updated.sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          );
+        });
         setIsModalOpen(false);
         setEditingCategory(null);
       } else {
-        showErrorToast(result.message || "Failed to update category");
+        showErrorToast(result.error);
       }
     } catch (error) {
       console.error("Error updating category:", error);
@@ -147,8 +93,8 @@ export default function CategoriesPage() {
     }
   };
 
-  // Delete category
-  const deleteCategory = async () => {
+  // Delete category using server action
+  const handleDeleteCategory = async () => {
     try {
       const token = getStoredToken();
       if (!token) {
@@ -156,25 +102,18 @@ export default function CategoriesPage() {
         return;
       }
 
-      const response = await fetch(
-        `${BASE_URL}/categories/${categoryToDelete._id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const result = await deleteCategory(categoryToDelete._id, token);
 
-      const result = await response.json();
-
-      if (result.sucess) {
-        showSuccessToast(result.message || "Category deleted successfully!");
-        await fetchCategories();
+      if (result.success) {
+        showSuccessToast(result.message);
+        // Remove the category from the list
+        setCategories((prev) =>
+          prev.filter((cat) => cat._id !== categoryToDelete._id)
+        );
         setDeleteModalOpen(false);
         setCategoryToDelete(null);
       } else {
-        showErrorToast(result.message || "Failed to delete category");
+        showErrorToast(result.error);
       }
     } catch (error) {
       console.error("Error deleting category:", error);
@@ -193,7 +132,7 @@ export default function CategoriesPage() {
     setIsModalOpen(true);
   };
 
-  const handleDeleteCategory = (category) => {
+  const handleDeleteCategoryClick = (category) => {
     setCategoryToDelete(category);
     setDeleteModalOpen(true);
   };
@@ -207,33 +146,6 @@ export default function CategoriesPage() {
     setDeleteModalOpen(false);
     setCategoryToDelete(null);
   };
-
-  // Load categories on component mount
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Categories</h1>
-        </div>
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6">
-            <div className="animate-pulse space-y-4">
-              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-              <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-16 bg-gray-200 rounded"></div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -347,7 +259,7 @@ export default function CategoriesPage() {
                           <Edit className="h-4 w-4" />
                         </button>
                         <button
-                          onClick={() => handleDeleteCategory(category)}
+                          onClick={() => handleDeleteCategoryClick(category)}
                           className="text-red-600 hover:text-red-900"
                           title="Delete category"
                         >
@@ -367,7 +279,7 @@ export default function CategoriesPage() {
       <CategoryModal
         isOpen={isModalOpen}
         onClose={handleModalClose}
-        onSubmit={editingCategory ? updateCategory : createCategory}
+        onSubmit={editingCategory ? handleUpdateCategory : handleCreateCategory}
         category={editingCategory}
         title={editingCategory ? "Edit Category" : "Add New Category"}
       />
@@ -376,7 +288,7 @@ export default function CategoriesPage() {
       <DeleteConfirmModal
         isOpen={deleteModalOpen}
         onClose={handleDeleteModalClose}
-        onConfirm={deleteCategory}
+        onConfirm={handleDeleteCategory}
         title="Delete Category"
         message={`Are you sure you want to delete "${categoryToDelete?.name}"? This action cannot be undone.`}
         confirmText="Delete"
