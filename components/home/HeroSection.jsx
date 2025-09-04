@@ -46,16 +46,17 @@ export default function HeroSection() {
           <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
             <div className="space-y-8 text-white">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl overflow-hidden bg-white/20 backdrop-blur-sm border border-white/30">
-                  <img
-                    src="/zoomitlogo.png"
-                    alt="ZoomStore"
-                    className="h-full w-full object-contain p-1"
-                  />
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg border-2 border-white/30">
+                  <span className="text-2xl font-bold text-white">Z</span>
                 </div>
-                <span className="text-2xl font-bold text-white drop-shadow-lg">
-                  ZoomStore
-                </span>
+                <div className="flex flex-col">
+                  <span className="text-lg font-semibold text-white drop-shadow-lg">
+                    Premium Shopping Experience
+                  </span>
+                  <span className="text-sm text-white/80 drop-shadow-md">
+                    Quality • Trust • Innovation
+                  </span>
+                </div>
               </div>
               <div className="space-y-4">
                 <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl text-white drop-shadow-lg">
@@ -144,16 +145,17 @@ export default function HeroSection() {
         <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
           <div className="space-y-8 text-white">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl overflow-hidden bg-white/20 backdrop-blur-sm border border-white/30">
-                <img
-                  src="/zoomitlogo.png"
-                  alt="ZoomStore"
-                  className="h-full w-full object-contain p-1"
-                />
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg border-2 border-white/30">
+                <span className="text-2xl font-bold text-white">Z</span>
               </div>
-              <span className="text-2xl font-bold text-white drop-shadow-lg">
-                ZoomStore
-              </span>
+              <div className="flex flex-col">
+                <span className="text-lg font-semibold text-white drop-shadow-lg">
+                  Premium Shopping Experience
+                </span>
+                <span className="text-sm text-white/80 drop-shadow-md">
+                  Quality • Trust • Innovation
+                </span>
+              </div>
             </div>
             <div className="space-y-4">
               <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl text-white drop-shadow-lg">
@@ -174,35 +176,20 @@ export default function HeroSection() {
                 </button>
               </Link>
 
-              {/* Conditionally render Join Free button or user-specific buttons */}
+              {/* Conditionally render Join Free button or admin panel button */}
               {!isLoggedIn ? (
                 <Link href="/register">
                   <button className="h-14 rounded-xl border-2 border-white/40 text-white px-8 text-lg font-semibold hover:bg-white/20 transition-all duration-300 backdrop-blur-sm hover:border-white/60">
                     Join Free
                   </button>
                 </Link>
-              ) : (
-                <div className="flex flex-col sm:flex-row gap-2">
-                  {userRole === "admin" || userRole === "superadmin" ? (
-                    <Link href="/admin/dashboard">
-                      <button className="h-14 rounded-xl border-2 border-white/40 text-white px-6 text-lg font-semibold hover:bg-white/20 transition-all duration-300 backdrop-blur-sm hover:border-white/60">
-                        👨‍💼 Admin Panel
-                      </button>
-                    </Link>
-                  ) : (
-                    <Link href="/profile">
-                      <button className="h-14 rounded-xl border-2 border-white/40 text-white px-6 text-lg font-semibold hover:bg-white/20 transition-all duration-300 backdrop-blur-sm hover:border-white/60">
-                        👤 My Profile
-                      </button>
-                    </Link>
-                  )}
-                  <Link href="/products">
-                    <button className="h-14 rounded-xl border-2 border-white/40 text-white px-6 text-lg font-semibold hover:bg-white/20 transition-all duration-300 backdrop-blur-sm hover:border-white/60">
-                      🛒 My Orders
-                    </button>
-                  </Link>
-                </div>
-              )}
+              ) : userRole === "admin" || userRole === "superadmin" ? (
+                <Link href="/admin/dashboard">
+                  <button className="h-14 rounded-xl border-2 border-white/40 text-white px-8 text-lg font-semibold hover:bg-white/20 transition-all duration-300 backdrop-blur-sm hover:border-white/60">
+                    👨‍💼 Admin Panel
+                  </button>
+                </Link>
+              ) : null}
             </div>
             <div className="flex items-center gap-8 pt-4">
               <div className="text-center">

@@ -56,18 +56,13 @@ export default function Navbar() {
       <div className="h-16">
         <div className="mx-auto h-full max-w-6xl px-4 sm:px-6 flex items-center justify-between">
           {/* Brand */}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg overflow-hidden">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/zoomitlogo.png"
-                alt="ZoomStore"
-                className="h-full w-full object-contain"
-              />
-            </div>
-            <span className="text-lg font-display font-semibold text-purple-900">
-              ZoomStore
-            </span>
+          <Link href="/" className="flex items-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="Logo"
+              className="h-6  w-auto object-contain"
+            />
           </Link>
 
           {/* Nav */}

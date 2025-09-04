@@ -235,12 +235,14 @@ export default function AdminLayout({ children }) {
       >
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
           <div className="flex items-center">
-            <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">Z</span>
+            <div className="w-10 h-10 rounded-lg overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/logo.png"
+                alt="Logo"
+                className="h-full w-full object-contain"
+              />
             </div>
-            <span className="ml-2 text-xl font-bold text-gray-900">
-              ZoomStore
-            </span>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
@@ -412,7 +414,7 @@ export default function AdminLayout({ children }) {
                   <p className="text-sm font-medium text-gray-900">
                     Admin User
                   </p>
-                  <p className="text-xs text-gray-500">admin@zoomstore.com</p>
+                  <p className="text-xs text-gray-500">admin@company.com</p>
                 </div>
               </div>
             </div>
