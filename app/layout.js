@@ -2,6 +2,7 @@ import { Inter, Poppins, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import NavbarWrapper from "../components/ui/NavbarWrapper.jsx";
 import FooterWrapper from "../components/ui/FooterWrapper.jsx";
+import ToastProvider from "../components/providers/ToastProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -32,6 +33,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${jakarta.className} antialiased`}>
+        <ToastProvider />
         <NavbarWrapper />
         {children}
         <FooterWrapper />
