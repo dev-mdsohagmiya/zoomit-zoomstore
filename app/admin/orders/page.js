@@ -516,7 +516,7 @@ export default function AdminOrdersPage() {
         {/* Orders Table */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
+            <table className="w-full text-left text-sm">
               <thead className="bg-gray-50 text-gray-700">
                 <tr>
                   <th className="px-4 py-3">
@@ -532,8 +532,8 @@ export default function AdminOrdersPage() {
                   <th className="px-4 py-3 font-medium">STATUS</th>
                   <th className="px-4 py-3 font-medium">METHOD</th>
                   <th className="px-4 py-3 font-medium">ACTIONS</th>
-            </tr>
-          </thead>
+                </tr>
+              </thead>
               <tbody className="divide-y divide-gray-200">
                 {orders.map((order) => (
                   <tr
@@ -555,12 +555,12 @@ export default function AdminOrdersPage() {
                     <td className="px-4 py-3 text-sm text-gray-900">
                       {order.date}
                     </td>
-              <td className="px-4 py-3">
+                    <td className="px-4 py-3">
                       <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
                           <span className="text-xs font-medium text-purple-600">
                             {order.customer.avatar}
-                </span>
+                          </span>
                         </div>
                         <div>
                           <div className="font-medium text-gray-900">
@@ -577,13 +577,13 @@ export default function AdminOrdersPage() {
                     </td>
                     <td className="px-4 py-3">
                       {getOrderStatus(order.status)}
-              </td>
-              <td className="px-4 py-3">
+                    </td>
+                    <td className="px-4 py-3">
                       <div className="flex items-center space-x-2">
                         {getPaymentMethodIcon(order.method)}
                         <span className="text-sm text-gray-900">
                           {order.method}
-                </span>
+                        </span>
                       </div>
                     </td>
                     <td className="px-4 py-3">
@@ -639,13 +639,13 @@ export default function AdminOrdersPage() {
                           </svg>
                         </button>
                       </div>
-              </td>
-            </tr>
+                    </td>
+                  </tr>
                 ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
         {/* Pagination */}
         <div className="flex items-center justify-between">

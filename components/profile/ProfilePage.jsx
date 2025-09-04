@@ -10,8 +10,11 @@ import {
   logout,
   getUserRole,
   isTokenExpired,
+  getStoredToken,
+  storeAuthData,
 } from "../../lib/auth-utils";
 import { showSuccessToast, showErrorToast } from "../../lib/toast-utils";
+import { updateUserProfile } from "../../app/actions/auth";
 import {
   User,
   Mail,
@@ -29,10 +32,39 @@ import {
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email"),
-  phone: z.string().optional(),
-  address: z.string().optional(),
-  bio: z.string().optional(),
+  photo: z.any().optional(),
+  address: z
+    .object({
+      street: z.string().optional(),
+      city: z.string().optional(),
+      state: z.string().optional(),
+      zipCode: z.string().optional(),
+      country: z.string().optional(),
+    })
+    .optional(),
 });
+
+// Helper function to parse address from JSON string
+const parseAddress = (addressData) => {
+  if (!addressData) return null;
+
+  // If it's already an object, return it
+  if (typeof addressData === "object") {
+    return addressData;
+  }
+
+  // If it's a string, try to parse it as JSON
+  if (typeof addressData === "string") {
+    try {
+      return JSON.parse(addressData);
+    } catch (error) {
+      console.error("Error parsing address JSON:", error);
+      return null;
+    }
+  }
+
+  return null;
+};
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -40,6 +72,7 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState(null);
 
   const {
     register,
@@ -47,8 +80,20 @@ export default function ProfilePage() {
     formState: { errors },
     reset,
     setValue,
+    watch,
   } = useForm({
     resolver: zodResolver(profileSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      address: {
+        street: "",
+        city: "",
+        state: "",
+        zipCode: "",
+        country: "",
+      },
+    },
   });
 
   useEffect(() => {
@@ -62,12 +107,20 @@ export default function ProfilePage() {
       const userData = getStoredUser();
       if (userData) {
         setUser(userData);
+
+        // Parse address from JSON string
+        const parsedAddress = parseAddress(userData.address);
+
         // Pre-fill form with user data
         setValue("name", userData.name || "");
         setValue("email", userData.email || "");
-        setValue("phone", userData.phone || "");
-        setValue("address", userData.address || "");
-        setValue("bio", userData.bio || "");
+        setValue("address", {
+          street: parsedAddress?.street || "",
+          city: parsedAddress?.city || "",
+          state: parsedAddress?.state || "",
+          zipCode: parsedAddress?.zipCode || "",
+          country: parsedAddress?.country || "",
+        });
       }
       setIsLoading(false);
     };
@@ -81,33 +134,69 @@ export default function ProfilePage() {
 
   const handleCancel = () => {
     setIsEditing(false);
+    setPhotoPreview(null);
     // Reset form to original values
     if (user) {
+      // Parse address from JSON string
+      const parsedAddress = parseAddress(user.address);
+
       setValue("name", user.name || "");
       setValue("email", user.email || "");
-      setValue("phone", user.phone || "");
-      setValue("address", user.address || "");
-      setValue("bio", user.bio || "");
+      setValue("address", {
+        street: parsedAddress?.street || "",
+        city: parsedAddress?.city || "",
+        state: parsedAddress?.state || "",
+        zipCode: parsedAddress?.zipCode || "",
+        country: parsedAddress?.country || "",
+      });
+    }
+  };
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPhotoPreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setPhotoPreview(null);
     }
   };
 
   const onSubmit = async (data) => {
     setIsSaving(true);
     try {
-      // Simulate API call for profile update
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const token = getStoredToken();
+      if (!token) {
+        showErrorToast("Authentication token not found. Please log in again.");
+        router.push("/login");
+        return;
+      }
 
-      // Update local user data
-      const updatedUser = { ...user, ...data };
-      setUser(updatedUser);
+      // Call the server action to update profile
+      const result = await updateUserProfile(data, token);
 
-      // Update localStorage
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      if (result.success) {
+        // Update local user data with the response from server
+        const updatedUser = { ...user, ...result.data };
+        setUser(updatedUser);
 
-      showSuccessToast("Profile updated successfully!");
-      setIsEditing(false);
+        // Update localStorage with new user data
+        storeAuthData(token, updatedUser);
+
+        showSuccessToast(result.message || "Profile updated successfully!");
+        setIsEditing(false);
+      } else {
+        showErrorToast(
+          result.error || "Failed to update profile. Please try again."
+        );
+      }
     } catch (error) {
-      showErrorToast("Failed to update profile. Please try again.");
+      console.error("Profile update error:", error);
+      showErrorToast("An unexpected error occurred. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -199,7 +288,13 @@ export default function ProfilePage() {
               <div className="bg-white border border-purple-200 rounded-lg p-6 shadow-lg">
                 <div className="text-center">
                   <div className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-purple-200 bg-purple-100 mx-auto mb-4">
-                    {user.photo ? (
+                    {photoPreview ? (
+                      <img
+                        src={photoPreview}
+                        alt="Profile Preview"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : user.photo ? (
                       <img
                         src={user.photo}
                         alt="Profile"
@@ -235,6 +330,52 @@ export default function ProfilePage() {
                     <Mail className="h-4 w-4" />
                     <span>{user.email}</span>
                   </div>
+                  {user.address &&
+                    (() => {
+                      const parsedAddress = parseAddress(user.address);
+                      return (
+                        parsedAddress && (
+                          <div className="flex items-start gap-3 text-sm text-purple-700">
+                            <svg
+                              className="h-4 w-4 mt-0.5 flex-shrink-0"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                            </svg>
+                            <div>
+                              {parsedAddress.street && (
+                                <div>{parsedAddress.street}</div>
+                              )}
+                              {parsedAddress.city && parsedAddress.state && (
+                                <div>
+                                  {parsedAddress.city}, {parsedAddress.state}
+                                </div>
+                              )}
+                              {parsedAddress.zipCode &&
+                                parsedAddress.country && (
+                                  <div>
+                                    {parsedAddress.zipCode},{" "}
+                                    {parsedAddress.country}
+                                  </div>
+                                )}
+                            </div>
+                          </div>
+                        )
+                      );
+                    })()}
                 </div>
 
                 <div className="mt-6 pt-6 border-t border-purple-200">
@@ -296,6 +437,7 @@ export default function ProfilePage() {
                       <input
                         {...register("name")}
                         disabled={!isEditing}
+                        value={watch("name") || ""}
                         className={`h-11 w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-purple-200 outline-none ${
                           errors.name
                             ? "border-red-300 focus:border-red-500"
@@ -316,6 +458,7 @@ export default function ProfilePage() {
                       <input
                         {...register("email")}
                         disabled={!isEditing}
+                        value={watch("email") || ""}
                         className={`h-11 w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-purple-200 outline-none ${
                           errors.email
                             ? "border-red-300 focus:border-red-500"
@@ -330,54 +473,162 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
+                  {/* Photo Upload */}
                   <div className="space-y-2">
                     <label className="text-sm text-purple-700 font-medium">
-                      Phone Number
+                      Profile Photo
                     </label>
-                    <input
-                      {...register("phone")}
-                      disabled={!isEditing}
-                      placeholder="Enter your phone number"
-                      className={`h-11 w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-purple-200 outline-none ${
-                        errors.phone
-                          ? "border-red-300 focus:border-red-500"
-                          : "border-purple-300 focus:border-purple-500"
-                      } ${!isEditing ? "bg-gray-50" : ""}`}
-                    />
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 rounded-full overflow-hidden bg-purple-100 flex items-center justify-center">
+                        {photoPreview ? (
+                          <img
+                            src={photoPreview}
+                            alt="Profile Preview"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : user?.photo ? (
+                          <img
+                            src={user.photo}
+                            alt="Profile"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <User className="h-8 w-8 text-purple-600" />
+                        )}
+                      </div>
+                      {isEditing && (
+                        <div className="flex-1">
+                          <input
+                            {...register("photo")}
+                            type="file"
+                            accept="image/*"
+                            onChange={handlePhotoChange}
+                            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            JPG, PNG or GIF. Max size 5MB.
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="space-y-2">
+                  {/* Address Fields */}
+                  <div className="space-y-4">
                     <label className="text-sm text-purple-700 font-medium">
                       Address
                     </label>
-                    <textarea
-                      {...register("address")}
-                      disabled={!isEditing}
-                      placeholder="Enter your address"
-                      rows={3}
-                      className={`w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-purple-200 outline-none resize-none ${
-                        errors.address
-                          ? "border-red-300 focus:border-red-500"
-                          : "border-purple-300 focus:border-purple-500"
-                      } ${!isEditing ? "bg-gray-50" : ""}`}
-                    />
-                  </div>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <label className="text-xs text-purple-600 font-medium">
+                          Street
+                        </label>
+                        <input
+                          {...register("address.street")}
+                          disabled={!isEditing}
+                          placeholder="Enter street address"
+                          value={watch("address.street") || ""}
+                          className={`h-11 w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-purple-200 outline-none ${
+                            errors.address?.street
+                              ? "border-red-300 focus:border-red-500"
+                              : "border-purple-300 focus:border-purple-500"
+                          } ${!isEditing ? "bg-gray-50" : ""}`}
+                        />
+                        {errors.address?.street && (
+                          <p className="text-xs text-red-600">
+                            {errors.address.street.message}
+                          </p>
+                        )}
+                      </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm text-purple-700 font-medium">
-                      Bio
-                    </label>
-                    <textarea
-                      {...register("bio")}
-                      disabled={!isEditing}
-                      placeholder="Tell us about yourself"
-                      rows={3}
-                      className={`w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-purple-200 outline-none resize-none ${
-                        errors.bio
-                          ? "border-red-300 focus:border-red-500"
-                          : "border-purple-300 focus:border-purple-500"
-                      } ${!isEditing ? "bg-gray-50" : ""}`}
-                    />
+                      <div className="space-y-2">
+                        <label className="text-xs text-purple-600 font-medium">
+                          City
+                        </label>
+                        <input
+                          {...register("address.city")}
+                          disabled={!isEditing}
+                          placeholder="Enter city"
+                          value={watch("address.city") || ""}
+                          className={`h-11 w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-purple-200 outline-none ${
+                            errors.address?.city
+                              ? "border-red-300 focus:border-red-500"
+                              : "border-purple-300 focus:border-purple-500"
+                          } ${!isEditing ? "bg-gray-50" : ""}`}
+                        />
+                        {errors.address?.city && (
+                          <p className="text-xs text-red-600">
+                            {errors.address.city.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-xs text-purple-600 font-medium">
+                          State
+                        </label>
+                        <input
+                          {...register("address.state")}
+                          disabled={!isEditing}
+                          placeholder="Enter state"
+                          value={watch("address.state") || ""}
+                          className={`h-11 w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-purple-200 outline-none ${
+                            errors.address?.state
+                              ? "border-red-300 focus:border-red-500"
+                              : "border-purple-300 focus:border-purple-500"
+                          } ${!isEditing ? "bg-gray-50" : ""}`}
+                        />
+                        {errors.address?.state && (
+                          <p className="text-xs text-red-600">
+                            {errors.address.state.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-xs text-purple-600 font-medium">
+                          ZIP Code
+                        </label>
+                        <input
+                          {...register("address.zipCode")}
+                          disabled={!isEditing}
+                          placeholder="Enter ZIP code"
+                          value={watch("address.zipCode") || ""}
+                          className={`h-11 w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-purple-200 outline-none ${
+                            errors.address?.zipCode
+                              ? "border-red-300 focus:border-red-500"
+                              : "border-purple-300 focus:border-purple-500"
+                          } ${!isEditing ? "bg-gray-50" : ""}`}
+                        />
+                        {errors.address?.zipCode && (
+                          <p className="text-xs text-red-600">
+                            {errors.address.zipCode.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2 md:col-span-2">
+                        <label className="text-xs text-purple-600 font-medium">
+                          Country
+                        </label>
+                        <input
+                          {...register("address.country")}
+                          disabled={!isEditing}
+                          placeholder="Enter country"
+                          value={watch("address.country") || ""}
+                          className={`h-11 w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-purple-200 outline-none ${
+                            errors.address?.country
+                              ? "border-red-300 focus:border-red-500"
+                              : "border-purple-300 focus:border-purple-500"
+                          } ${!isEditing ? "bg-gray-50" : ""}`}
+                        />
+                        {errors.address?.country && (
+                          <p className="text-xs text-red-600">
+                            {errors.address.country.message}
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </form>
               </div>

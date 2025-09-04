@@ -149,3 +149,78 @@ export async function logoutUser(token) {
     };
   }
 }
+
+export async function updateUserProfile(formData, token) {
+  try {
+    if (!token) {
+      return {
+        success: false,
+        error: "No authentication token found.",
+      };
+    }
+
+    // Create FormData for multipart/form-data request
+    const data = new FormData();
+
+    // Add fields if they exist and are not empty
+    if (formData.name && formData.name.trim()) {
+      data.append("name", formData.name.trim());
+    }
+
+    if (formData.email && formData.email.trim()) {
+      data.append("email", formData.email.trim());
+    }
+
+    // Add photo if provided
+    if (formData.photo && formData.photo.length > 0) {
+      data.append("photo", formData.photo[0]);
+    }
+
+    // Add address if provided
+    if (formData.address) {
+      const addressData = {};
+      if (formData.address.street) addressData.street = formData.address.street;
+      if (formData.address.city) addressData.city = formData.address.city;
+      if (formData.address.state) addressData.state = formData.address.state;
+      if (formData.address.zipCode)
+        addressData.zipCode = formData.address.zipCode;
+      if (formData.address.country)
+        addressData.country = formData.address.country;
+
+      // Only append address if it has at least one field
+      if (Object.keys(addressData).length > 0) {
+        data.append("address", JSON.stringify(addressData));
+      }
+    }
+
+    const response = await fetch(`${BASE_URL}/users/profile`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        // Don't set Content-Type for FormData, let browser set it with boundary
+      },
+      body: data,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      return {
+        success: false,
+        error: errorData.message || `HTTP error! status: ${response.status}`,
+      };
+    }
+
+    const result = await response.json();
+    return {
+      success: true,
+      data: result.data,
+      message: result.message || "Profile updated successfully!",
+    };
+  } catch (error) {
+    console.error("Profile update error:", error);
+    return {
+      success: false,
+      error: "Network error. Please check your connection and try again.",
+    };
+  }
+}

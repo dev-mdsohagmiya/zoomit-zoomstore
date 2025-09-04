@@ -95,35 +95,35 @@ export default function Navbar() {
             ) : isLoggedIn ? (
               <div className="flex items-center gap-3">
                 {/* Admin Panel Link for Admin Users */}
-                {(userRole === "admin" || userRole === "superadmin") && (
+                {userRole === "admin" || userRole === "superadmin" ? (
                   <Link href="/admin/dashboard">
                     <button className="h-9 rounded-md border border-purple-300 px-3 text-sm font-body font-medium text-purple-900 hover:bg-purple-50">
-                      Admin Panel
+                      Go to Admin Panel
                     </button>
                   </Link>
+                ) : (
+                  /* User Profile for Regular Users */
+                  <Link href="/profile" className="flex items-center gap-2">
+                    <div className="w-9 h-9 rounded-full overflow-hidden ring-1 ring-purple-200">
+                      {user?.photo ? (
+                        <img
+                          alt="Profile"
+                          src={user.photo}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="h-full w-full bg-purple-100 flex items-center justify-center">
+                          <span className="text-purple-600 text-sm font-medium">
+                            {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <span className="hidden sm:block text-sm font-medium text-purple-900">
+                      {user?.name || "User"}
+                    </span>
+                  </Link>
                 )}
-
-                {/* User Profile */}
-                <Link href="/profile" className="flex items-center gap-2">
-                  <div className="w-9 h-9 rounded-full overflow-hidden ring-1 ring-purple-200">
-                    {user?.photo ? (
-                      <img
-                        alt="Profile"
-                        src={user.photo}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="h-full w-full bg-purple-100 flex items-center justify-center">
-                        <span className="text-purple-600 text-sm font-medium">
-                          {user?.name?.charAt(0)?.toUpperCase() || "U"}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  <span className="hidden sm:block text-sm font-medium text-purple-900">
-                    {user?.name || "User"}
-                  </span>
-                </Link>
               </div>
             ) : (
               <div className="hidden sm:flex items-center gap-2">

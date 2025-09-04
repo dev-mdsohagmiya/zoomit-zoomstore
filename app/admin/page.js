@@ -1,47 +1,79 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema } from "../../lib/validations/auth";
+import { loginUser } from "../../app/actions/auth";
+import {
+  storeAuthData,
+  isAuthenticated,
+  getUserRole,
+} from "../../lib/auth-utils";
+import { showSuccessToast, showErrorToast } from "../../lib/toast-utils";
 
 export default function AdminLoginPage() {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
   const router = useRouter();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
-    try {
-      // For now, we'll use a simple hardcoded admin check
-      // In a real app, this would make an API call to authenticate
-      if (
-        formData.email === "admin@zoomstore.com" &&
-        formData.password === "admin123"
-      ) {
-        // Store admin session (in a real app, use proper session management)
-        localStorage.setItem("adminLoggedIn", "true");
+  // Check if user is already logged in and redirect accordingly
+  useEffect(() => {
+    if (isAuthenticated()) {
+      const userRole = getUserRole();
+      if (userRole === "admin" || userRole === "superadmin") {
         router.push("/admin/dashboard");
       } else {
-        setError("Invalid admin credentials");
+        router.push("/");
       }
-    } catch (err) {
-      setError("Login failed. Please try again.");
+    }
+  }, [router]);
+
+  const onSubmit = async (data) => {
+    setIsLoading(true);
+    try {
+      const result = await loginUser(data);
+
+      if (result.success) {
+        // Store token and user data
+        if (result.data?.accessToken) {
+          storeAuthData(result.data.accessToken, result.data.user);
+        }
+
+        // Check if user is admin or superadmin
+        const userRole = result.data?.user?.role;
+        if (userRole === "admin" || userRole === "superadmin") {
+          showSuccessToast("Admin login successful!");
+          router.push("/admin/dashboard");
+        } else {
+          showErrorToast("Access denied. Admin privileges required.");
+          // Clear auth data if not admin
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("user");
+        }
+      } else {
+        showErrorToast(
+          result.error || "Login failed. Please check your credentials."
+        );
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      showErrorToast("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
   };
 
   return (
@@ -74,13 +106,7 @@ export default function AdminLoginPage() {
           </div>
 
           {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                {error}
-              </div>
-            )}
-
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
               <label
                 htmlFor="email"
@@ -89,15 +115,21 @@ export default function AdminLoginPage() {
                 Admin Email
               </label>
               <input
+                {...register("email")}
                 type="email"
                 id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors font-body"
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors font-body ${
+                  errors.email
+                    ? "border-red-300 focus:border-red-500"
+                    : "border-purple-200"
+                }`}
                 placeholder="admin@zoomstore.com"
               />
+              {errors.email && (
+                <p className="text-xs text-red-600 mt-1">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
 
             <div>
@@ -108,15 +140,21 @@ export default function AdminLoginPage() {
                 Password
               </label>
               <input
+                {...register("password")}
                 type="password"
                 id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors font-body"
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors font-body ${
+                  errors.password
+                    ? "border-red-300 focus:border-red-500"
+                    : "border-purple-200"
+                }`}
                 placeholder="Enter your password"
               />
+              {errors.password && (
+                <p className="text-xs text-red-600 mt-1">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
 
             <button
@@ -128,15 +166,15 @@ export default function AdminLoginPage() {
             </button>
           </form>
 
-          {/* Demo Credentials */}
+          {/* Admin Access Info */}
           <div className="mt-6 p-4 bg-purple-50 rounded-lg">
             <h3 className="text-sm font-body font-medium text-purple-900 mb-2">
-              Demo Credentials:
+              Admin Access:
             </h3>
             <p className="text-xs text-purple-700 font-body">
-              Email: admin@zoomstore.com
+              Only users with admin or superadmin roles can access this panel.
               <br />
-              Password: admin123
+              Please use your registered admin credentials to sign in.
             </p>
           </div>
 

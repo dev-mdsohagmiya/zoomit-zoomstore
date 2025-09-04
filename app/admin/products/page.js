@@ -374,7 +374,7 @@ export default function AdminProductsPage() {
         {/* Products Table */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
+            <table className="w-full text-left text-sm">
               <thead className="bg-gray-50 text-gray-700">
                 <tr>
                   <th className="px-4 py-3">
@@ -391,8 +391,8 @@ export default function AdminProductsPage() {
                   <th className="px-4 py-3 font-medium">QTY</th>
                   <th className="px-4 py-3 font-medium">STATUS</th>
                   <th className="px-4 py-3 font-medium">ACTIONS</th>
-            </tr>
-          </thead>
+                </tr>
+              </thead>
               <tbody className="divide-y divide-gray-200">
                 {products.map((product) => (
                   <tr key={product.id} className="hover:bg-gray-50">
@@ -417,14 +417,14 @@ export default function AdminProductsPage() {
                         </div>
                       </div>
                     </td>
-              <td className="px-4 py-3">
+                    <td className="px-4 py-3">
                       <div className="flex items-center space-x-2">
                         <span className="text-sm">
                           {getCategoryIcon(product.category)}
                         </span>
                         <span className="text-sm text-gray-900">
                           {product.category}
-                </span>
+                        </span>
                       </div>
                     </td>
                     <td className="px-4 py-3">
@@ -448,8 +448,8 @@ export default function AdminProductsPage() {
                     </td>
                     <td className="px-4 py-3">
                       {getStatusBadge(product.status)}
-              </td>
-              <td className="px-4 py-3">
+                    </td>
+                    <td className="px-4 py-3">
                       <div className="flex items-center space-x-2">
                         <button
                           onClick={() => handleEditClick(product)}
@@ -485,13 +485,13 @@ export default function AdminProductsPage() {
                           </svg>
                         </button>
                       </div>
-              </td>
-            </tr>
+                    </td>
+                  </tr>
                 ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
         {/* Pagination */}
         <div className="flex items-center justify-between">

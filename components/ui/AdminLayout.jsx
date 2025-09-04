@@ -2,6 +2,15 @@
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import {
+  isAuthenticated as checkAuth,
+  getUserRole,
+  isTokenExpired,
+  getStoredToken,
+  clearAuthData,
+} from "../../lib/auth-utils";
+import { logoutUser } from "../../app/actions/auth";
+import { showSuccessToast, showErrorToast } from "../../lib/toast-utils";
 
 export default function AdminLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -11,19 +20,52 @@ export default function AdminLayout({ children }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Check if admin is logged in
-    const adminLoggedIn = localStorage.getItem("adminLoggedIn");
-    if (adminLoggedIn === "true") {
+    // Check if admin is logged in using proper auth system
+    const checkAdminAuth = () => {
+      if (!checkAuth() || isTokenExpired()) {
+        router.push("/login");
+        return;
+      }
+
+      const userRole = getUserRole();
+      if (userRole !== "admin" && userRole !== "superadmin") {
+        router.push("/");
+        return;
+      }
+
       setIsAuthenticated(true);
-    } else {
-      router.push("/admin");
-    }
+    };
+
+    checkAdminAuth();
     setIsLoading(false);
   }, [router]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("adminLoggedIn");
-    router.push("/admin");
+  const handleLogout = async () => {
+    try {
+      const token = getStoredToken();
+      if (token) {
+        // Call logout API
+        const result = await logoutUser(token);
+        if (result.success) {
+          showSuccessToast("Logged out successfully!");
+        } else {
+          showErrorToast(result.error || "Logout failed");
+        }
+      }
+
+      // Clear local auth data regardless of API result
+      clearAuthData();
+
+      // Redirect to login page
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      showErrorToast("An error occurred during logout");
+
+      // Clear local auth data even if API fails
+      clearAuthData();
+      router.push("/login");
+    }
   };
 
   if (isLoading) {
