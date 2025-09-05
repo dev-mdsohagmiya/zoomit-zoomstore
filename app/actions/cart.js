@@ -34,12 +34,53 @@ export async function getCart() {
 
     const result = await response.json();
 
+    if (process.env.NODE_ENV === "development") {
+      console.log("=== CART API DEBUG ===");
+      console.log("Cart API Response status:", response.status);
+      console.log("Cart API Response data:", result);
+    }
+
     if (!response.ok) {
       return {
         success: false,
         error: result.message || "Failed to fetch cart",
         data: null,
       };
+    }
+
+    // Validate cart data structure
+    if (result.data && result.data.items) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("Cart items from API:", result.data.items);
+
+        // Debug each item structure
+        result.data.items.forEach((item, index) => {
+          console.log(`API Item ${index}:`, {
+            product: item.product,
+            productId: item.product?._id,
+            quantity: item.quantity,
+            price: item.price,
+            selectedSize: item.selectedSize,
+            selectedColor: item.selectedColor,
+          });
+        });
+      }
+
+      // Check if items have proper product structure
+      const invalidItems = result.data.items.filter(
+        (item) =>
+          !item.product ||
+          !item.product._id ||
+          typeof item.product._id !== "string"
+      );
+
+      if (invalidItems.length > 0) {
+        return {
+          success: false,
+          error: "Invalid cart data structure",
+          data: null,
+        };
+      }
     }
 
     return {

@@ -319,6 +319,50 @@ export async function deleteUserByAdminAndSuperAdmin(userId) {
   }
 }
 
+// Get current user profile
+export async function getUserProfile() {
+  try {
+    const cookieStore = cookies();
+    const token = cookieStore.get("accessToken")?.value;
+
+    if (!token) {
+      return {
+        success: false,
+        error: "Authentication token not found. Please log in again.",
+      };
+    }
+
+    const response = await fetch(`${API_BASE_URL}/users/profile`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: result.message || "Failed to fetch user profile",
+      };
+    }
+
+    return {
+      success: true,
+      data: result.data,
+      message: result.message,
+    };
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    return {
+      success: false,
+      error: "Failed to fetch user profile",
+    };
+  }
+}
+
 // Create admin (Super Admin only - using /admin/create endpoint)
 export async function createAdminBySuperAdmin(adminData) {
   try {
