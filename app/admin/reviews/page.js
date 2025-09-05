@@ -195,6 +195,14 @@ export default function AdminReviewsPage() {
 
   return (
     <AdminLayout>
+      <h1 className="text-2xl font-bold text-gray-900">
+        Coming Soon...(Sorry for the inconvenience)
+      </h1>
+    </AdminLayout>
+  );
+
+  return (
+    <AdminLayout>
       <div className="space-y-6">
         {/* Page Header */}
         <div>

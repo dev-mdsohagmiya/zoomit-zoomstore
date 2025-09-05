@@ -113,6 +113,14 @@ export default function AdminProfilePage() {
 
   return (
     <AdminLayout>
+      <h1 className="text-2xl font-bold text-gray-900">
+        Coming Soon...(Sorry for the inconvenience)
+      </h1>
+    </AdminLayout>
+  );
+
+  return (
+    <AdminLayout>
       <div className="space-y-6">
         {/* Page Header */}
         <div className="flex items-center justify-between">
@@ -505,4 +513,3 @@ export default function AdminProfilePage() {
     </AdminLayout>
   );
 }
-

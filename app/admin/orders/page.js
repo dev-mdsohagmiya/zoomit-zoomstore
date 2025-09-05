@@ -253,6 +253,13 @@ export default function AdminOrdersPage() {
     setSelectedOrder(order);
     setShowDetailsModal(true);
   };
+  return (
+    <AdminLayout>
+      <h1 className="text-2xl font-bold text-gray-900">
+        Coming Soon...(Sorry for the inconvenience)
+      </h1>
+    </AdminLayout>
+  );
 
   return (
     <AdminLayout>

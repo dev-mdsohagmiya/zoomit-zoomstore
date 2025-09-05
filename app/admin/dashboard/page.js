@@ -4,6 +4,14 @@ import AdminLayout from "../../../components/ui/AdminLayout";
 export default function AdminDashboardPage() {
   return (
     <AdminLayout>
+      <h1 className="text-2xl font-bold text-gray-900">
+        Coming Soon...(Sorry for the inconvenience)
+      </h1>
+    </AdminLayout>
+  );
+
+  return (
+    <AdminLayout>
       <div className="space-y-6">
         {/* Page Header */}
         <div>
