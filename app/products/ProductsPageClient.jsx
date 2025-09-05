@@ -4,6 +4,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import ProductCard from "../../components/ui/ProductCard";
 import { Search, Filter } from "lucide-react";
 import { getPublicProducts } from "../actions/public";
+import { useErrorHandler } from "../../lib/hooks/useErrorHandler";
+import {
+  ProductListSkeleton,
+  ErrorState,
+  EmptyState,
+} from "../../components/ui/LoadingStates";
 
 const PRICE_RANGES = [
   { label: "All Prices", min: 0, max: Infinity },
@@ -28,6 +34,8 @@ export default function ProductsPageClient({
     initialPagination || { page: 1, pages: 1, total: 0 }
   );
   const [isLoading, setIsLoading] = useState(false);
+  const { error, handleError, clearError, executeWithErrorHandling } =
+    useErrorHandler();
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState(searchParams?.search || "");
@@ -122,9 +130,13 @@ export default function ProductsPageClient({
         setPagination(
           result.data?.pagination || { page: 1, pages: 1, total: 0 }
         );
+        clearError();
+      } else {
+        throw new Error(result.error || "Failed to fetch products");
       }
     } catch (error) {
       console.error("Error refreshing data:", error);
+      handleError(error, "Failed to load products. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -409,34 +421,34 @@ export default function ProductsPageClient({
 
             {/* Products Grid */}
             {isLoading ? (
-              <div className="text-center py-12">
-                <div className="text-purple-400 mb-4">
-                  <Search className="h-16 w-16 mx-auto animate-pulse" />
-                </div>
-                <h3 className="text-lg font-medium text-purple-900 mb-2">
-                  Loading products...
-                </h3>
-              </div>
+              <ProductListSkeleton count={12} />
+            ) : error ? (
+              <ErrorState
+                title="Failed to load products"
+                message={error}
+                onRetry={() => {
+                  clearError();
+                  refreshData();
+                }}
+              />
+            ) : products.length === 0 ? (
+              <EmptyState
+                title="No products found"
+                message="Try adjusting your search or filter criteria"
+                action={
+                  <button
+                    onClick={clearFilters}
+                    className="mt-4 bg-purple-900 text-white px-6 py-2 rounded-lg hover:bg-purple-800 transition-colors"
+                  >
+                    Clear Filters
+                  </button>
+                }
+              />
             ) : (
               <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
                 {products.map((product) => (
                   <ProductCard key={product._id} product={product} />
                 ))}
-              </div>
-            )}
-
-            {/* No Results */}
-            {!isLoading && products.length === 0 && (
-              <div className="text-center py-12">
-                <div className="text-purple-400 mb-4">
-                  <Search className="h-16 w-16 mx-auto" />
-                </div>
-                <h3 className="text-lg font-medium text-purple-900 mb-2">
-                  No products found
-                </h3>
-                <p className="text-purple-600">
-                  Try adjusting your search or filter criteria
-                </p>
               </div>
             )}
           </div>

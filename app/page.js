@@ -8,59 +8,39 @@ import {
 } from "lucide-react";
 import ProductCard from "../components/ui/ProductCard";
 import HeroSection from "../components/home/HeroSection";
+import { getPublicProducts, getPublicCategories } from "./actions/public";
 
-const FEATURED = [
-  {
-    id: "1",
-    title: "Classic Cotton Tee",
-    subtitle: "Men • Apparel",
-    price: 24,
-    originalPrice: 35,
-    rating: 4,
-    reviews: 128,
-    image:
-      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&h=400&fit=crop",
-  },
-  {
-    id: "2",
-    title: "Wireless Headphones",
-    subtitle: "Audio",
-    price: 89,
-    originalPrice: 120,
-    rating: 5,
-    reviews: 89,
-    image:
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&h=400&fit=crop",
-  },
-  {
-    id: "3",
-    title: "Sneaker Low-Top",
-    subtitle: "Shoes",
-    price: 69,
-    originalPrice: 95,
-    rating: 4,
-    reviews: 203,
-    image:
-      "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600&h=400&fit=crop",
-  },
-  {
-    id: "4",
-    title: "Leather Backpack",
-    subtitle: "Bags",
-    price: 129,
-    originalPrice: 179,
-    rating: 5,
-    reviews: 67,
-    image:
-      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&h=400&fit=crop",
-  },
-];
+export default async function HomePage() {
+  // Fetch featured products (random 8 products)
+  let featuredProducts = [];
+  let categories = [];
+  let heroProduct = null;
 
-export default function HomePage() {
+  try {
+    // Fetch random products for featured section
+    const productsResult = await getPublicProducts(1, 8, {});
+    if (productsResult.success) {
+      featuredProducts = productsResult.data?.products || [];
+    }
+
+    // Fetch categories
+    const categoriesResult = await getPublicCategories();
+    if (categoriesResult.success) {
+      categories = categoriesResult.data || [];
+    }
+
+    // Get a random product for hero section
+    if (featuredProducts.length > 0) {
+      const randomIndex = Math.floor(Math.random() * featuredProducts.length);
+      heroProduct = featuredProducts[randomIndex];
+    }
+  } catch (error) {
+    console.error("Error fetching home page data:", error);
+  }
   return (
     <div className="min-h-screen bg-white">
       {/* Hero */}
-      <HeroSection />
+      <HeroSection heroProduct={heroProduct} />
 
       {/* Benefits */}
       <section
@@ -125,48 +105,93 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              {
-                label: "Fashion & Clothing",
-                img: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&h=400&fit=crop",
-                count: "1,200+ items",
-              },
-              {
-                label: "Electronics & Gadgets",
-                img: "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=600&h=400&fit=crop",
-                count: "800+ items",
-              },
-              {
-                label: "Home & Living",
-                img: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=600&h=400&fit=crop",
-                count: "650+ items",
-              },
-              {
-                label: "Sports & Fitness",
-                img: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&h=400&fit=crop",
-                count: "400+ items",
-              },
-            ].map((c) => (
-              <Link
-                key={c.label}
-                href="/products"
-                className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  alt={c.label}
-                  src={c.img}
-                  className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <h3 className="text-lg font-semibold text-white mb-1">
-                    {c.label}
-                  </h3>
-                  <p className="text-sm text-white/80">{c.count}</p>
-                </div>
-              </Link>
-            ))}
+            {categories.length > 0
+              ? categories.slice(0, 4).map((category, index) => {
+                  // Category-specific images with better variety
+                  const categoryImages = [
+                    "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&h=400&fit=crop", // Fashion & Clothing
+                    "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=600&h=400&fit=crop", // Electronics & Gadgets
+                    "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=600&h=400&fit=crop", // Home & Living
+                    "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&h=400&fit=crop", // Sports & Fitness
+                    "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&h=400&fit=crop", // Beauty & Cosmetics
+                    "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&h=400&fit=crop", // Baby & Kids
+                    "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&h=400&fit=crop", // Kitchen & Cooking
+                    "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&h=400&fit=crop", // Audio & Music
+                  ];
+
+                  return (
+                    <Link
+                      key={category._id}
+                      href={`/products?category=${category.slug}`}
+                      className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        alt={category.name}
+                        src={categoryImages[index % categoryImages.length]}
+                        className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 p-4">
+                        <h3 className="text-lg font-semibold text-white mb-1">
+                          {category.name}
+                        </h3>
+                        <p className="text-sm text-white/80">Shop now</p>
+                      </div>
+                    </Link>
+                  );
+                })
+              : // Fallback categories if API fails
+                [
+                  {
+                    _id: "1",
+                    name: "Fashion & Clothing",
+                    slug: "fashion-clothing",
+                    image:
+                      "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&h=400&fit=crop",
+                  },
+                  {
+                    _id: "2",
+                    name: "Electronics & Gadgets",
+                    slug: "electronics-gadgets",
+                    image:
+                      "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=600&h=400&fit=crop",
+                  },
+                  {
+                    _id: "3",
+                    name: "Home & Living",
+                    slug: "home-living",
+                    image:
+                      "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=600&h=400&fit=crop",
+                  },
+                  {
+                    _id: "4",
+                    name: "Sports & Fitness",
+                    slug: "sports-fitness",
+                    image:
+                      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&h=400&fit=crop",
+                  },
+                ].map((category) => (
+                  <Link
+                    key={category._id}
+                    href={`/products?category=${category.slug}`}
+                    className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      alt={category.name}
+                      src={category.image}
+                      className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                      <h3 className="text-lg font-semibold text-white mb-1">
+                        {category.name}
+                      </h3>
+                      <p className="text-sm text-white/80">Shop now</p>
+                    </div>
+                  </Link>
+                ))}
           </div>
         </div>
       </section>
@@ -189,9 +214,63 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {FEATURED.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
+            {featuredProducts.length > 0
+              ? featuredProducts.map((product) => (
+                  <ProductCard key={product._id} product={product} />
+                ))
+              : // Fallback products if API fails
+                [
+                  {
+                    _id: "1",
+                    name: "Classic Cotton Tee",
+                    price: 24,
+                    discount: 31,
+                    rating: 4,
+                    numReviews: 128,
+                    photos: [
+                      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&h=400&fit=crop",
+                    ],
+                    categories: [{ name: "Apparel" }],
+                  },
+                  {
+                    _id: "2",
+                    name: "Wireless Headphones",
+                    price: 89,
+                    discount: 26,
+                    rating: 5,
+                    numReviews: 89,
+                    photos: [
+                      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&h=400&fit=crop",
+                    ],
+                    categories: [{ name: "Audio" }],
+                  },
+                  {
+                    _id: "3",
+                    name: "Sneaker Low-Top",
+                    price: 69,
+                    discount: 27,
+                    rating: 4,
+                    numReviews: 203,
+                    photos: [
+                      "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600&h=400&fit=crop",
+                    ],
+                    categories: [{ name: "Shoes" }],
+                  },
+                  {
+                    _id: "4",
+                    name: "Leather Backpack",
+                    price: 129,
+                    discount: 28,
+                    rating: 5,
+                    numReviews: 67,
+                    photos: [
+                      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&h=400&fit=crop",
+                    ],
+                    categories: [{ name: "Bags" }],
+                  },
+                ].map((product) => (
+                  <ProductCard key={product._id} product={product} />
+                ))}
           </div>
         </div>
       </section>

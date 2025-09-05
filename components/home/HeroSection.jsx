@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { isAuthenticated, getUserRole } from "../../lib/auth-utils";
 
-export default function HeroSection() {
+export default function HeroSection({ heroProduct }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -220,35 +220,49 @@ export default function HeroSection() {
                 className="w-full h-[500px] object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-purple-900/60 to-transparent"></div>
-              <div className="absolute bottom-6 left-6 right-6">
-                <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-white/30">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-purple-200">
-                      <img
-                        src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100&h=100&fit=crop"
-                        alt="Product"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-semibold text-slate-900">
-                        Wireless Headphones
-                      </div>
-                      <div className="text-sm text-slate-600">
-                        ৳9,790 • ⭐⭐⭐⭐⭐ (89 reviews)
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-lg font-bold text-purple-900">
-                        ৳9,790
-                      </div>
-                      <div className="text-sm text-slate-500 line-through">
-                        ৳13,200
+              {heroProduct && (
+                <Link href={`/products/${heroProduct.slug || heroProduct._id}`}>
+                  <div className="absolute bottom-6 left-6 right-6 cursor-pointer group">
+                    <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-white/30 group-hover:bg-white transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-purple-200">
+                          <img
+                            src={
+                              heroProduct.photos?.[0] ||
+                              "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100&h=100&fit=crop"
+                            }
+                            alt={heroProduct.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-semibold text-slate-900 group-hover:text-purple-900 transition-colors">
+                            {heroProduct.name}
+                          </div>
+                          <div className="text-sm text-slate-600">
+                            ৳{heroProduct.price?.toLocaleString()} • ⭐⭐⭐⭐⭐
+                            ({heroProduct.numReviews || 0} reviews)
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-purple-900">
+                            ৳{heroProduct.price?.toLocaleString()}
+                          </div>
+                          {heroProduct.discount && heroProduct.discount > 0 && (
+                            <div className="text-sm text-slate-500 line-through">
+                              ৳
+                              {Math.round(
+                                heroProduct.price /
+                                  (1 - heroProduct.discount / 100)
+                              ).toLocaleString()}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
+                </Link>
+              )}
             </div>
             {/* Floating elements */}
             <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full flex items-center justify-center shadow-xl animate-bounce border-4 border-white/30">

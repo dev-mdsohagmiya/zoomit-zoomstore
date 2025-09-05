@@ -5,11 +5,15 @@ const nextConfig = {
       bodySizeLimit: "10mb", // Increase body size limit for file uploads
     },
   },
-  // Additional configuration for file uploads
-  api: {
-    bodyParser: {
-      sizeLimit: "10mb",
-    },
+  // Performance optimizations
+  images: {
+    domains: ["res.cloudinary.com", "localhost"],
+    formats: ["image/webp", "image/avif"],
+    minimumCacheTTL: 60,
+  },
+  // Compiler optimizations
+  compiler: {
+    removeConsole: process.env.NODE_ENV === "production",
   },
 };
 
