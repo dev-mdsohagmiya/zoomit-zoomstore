@@ -1,18 +1,73 @@
 "use client";
+import { useState } from "react";
 import Link from "next/link";
-import { Star } from "lucide-react";
+import { Star, ShoppingCart, Plus, Loader2 } from "lucide-react";
 import { truncateText } from "../../lib/utils";
+import { addToCart } from "../../app/actions/cart";
+import { showSuccessToast, showErrorToast } from "../../lib/toast-utils";
+import { isAuthenticated } from "../../lib/auth-utils";
 
 export default function ProductCard({ product }) {
-  // Calculate discount
-  const hasDiscount = product.discount && product.discount > 0;
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+
+  // Calculate prices first
+  const originalPrice = product.price || 0;
   const discountPercentage = product.discount || 0;
 
-  // Calculate prices
-  const originalPrice = product.price;
-  const discountedPrice = hasDiscount
-    ? product.price - (product.price * product.discount) / 100
-    : product.price;
+  // Calculate discounted price
+  const discountedPrice =
+    discountPercentage > 0
+      ? originalPrice - (originalPrice * discountPercentage) / 100
+      : originalPrice;
+
+  // Check if there's a discount
+  const hasDiscount = discountPercentage > 0;
+
+  // Handle add to cart
+  const handleAddToCart = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isAuthenticated()) {
+      showErrorToast("Please login to add items to cart");
+      return;
+    }
+
+    setIsAddingToCart(true);
+
+    try {
+      // Select default size and color if available
+      let selectedSize = null;
+      let selectedColor = null;
+
+      // Select first available size if sizes exist
+      if (product.sizes && product.sizes.length > 0) {
+        selectedSize = product.sizes[0];
+      }
+
+      // Select first available color if colors exist
+      if (product.colors && product.colors.length > 0) {
+        selectedColor = product.colors[0];
+      }
+
+      const result = await addToCart(
+        product._id || product.id,
+        1,
+        selectedSize,
+        selectedColor
+      );
+
+      if (result.success) {
+        showSuccessToast("Item added to cart successfully");
+      } else {
+        showErrorToast(result.error || "Failed to add item to cart");
+      }
+    } catch (error) {
+      showErrorToast("Failed to add item to cart");
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
 
   // Get product image
   const productImage =
@@ -51,7 +106,7 @@ export default function ProductCard({ product }) {
       {/* Discount Badge */}
       {hasDiscount && (
         <div className="absolute top-3 left-3 z-10 rounded-full bg-red-500 px-2 py-1 text-xs font-semibold text-white">
-          -{discountPercentage}%
+          -{Math.round(discountPercentage)}%
         </div>
       )}
 
@@ -154,8 +209,30 @@ export default function ProductCard({ product }) {
         </div>
 
         {/* Add to Cart Button */}
-        <button className="w-full rounded-lg bg-purple-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">
-          Add to Cart
+        <button
+          onClick={handleAddToCart}
+          disabled={isAddingToCart || !product.inStock}
+          className={`w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 flex items-center justify-center gap-2 ${
+            !product.inStock
+              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+              : isAddingToCart
+              ? "bg-purple-700 text-white cursor-not-allowed"
+              : "bg-purple-900 text-white hover:bg-purple-800"
+          }`}
+        >
+          {isAddingToCart ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Adding...
+            </>
+          ) : !product.inStock ? (
+            "Out of Stock"
+          ) : (
+            <>
+              <ShoppingCart className="h-4 w-4" />
+              Add to Cart
+            </>
+          )}
         </button>
       </div>
     </div>

@@ -205,17 +205,17 @@ export default function ProductsPageClient({
         </div>
 
         {/* Mobile Filter Toggle */}
-        <div className="lg:hidden mb-4">
+        <div className="lg:hidden mb-3">
           <button
             onClick={() => setShowMobileFilters(!showMobileFilters)}
-            className="w-full bg-white rounded-xl border border-purple-200 p-4 shadow-sm flex items-center justify-between hover:bg-purple-50 transition-colors"
+            className="w-full bg-white rounded-lg border border-purple-200 p-3 shadow-sm flex items-center justify-between hover:bg-purple-50 transition-colors"
           >
-            <div className="flex items-center gap-3">
-              <Filter className="h-5 w-5 text-purple-600" />
-              <span className="font-medium text-purple-900">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-purple-600" />
+              <span className="text-sm font-medium text-purple-900">
                 Filters & Sort
               </span>
-              <div className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs font-medium">
+              <div className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-xs font-medium">
                 {getActiveFiltersCount()} active
               </div>
             </div>
@@ -242,33 +242,33 @@ export default function ProductsPageClient({
         </div>
 
         {/* Main Content Layout */}
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
           {/* Left Sidebar - Filters & Sort */}
           <div
-            className={`lg:w-80 flex-shrink-0 ${
+            className={`lg:w-64 flex-shrink-0 ${
               showMobileFilters ? "block" : "hidden lg:block"
             }`}
           >
-            <div className="bg-white rounded-2xl border border-purple-200 p-6 shadow-lg lg:sticky lg:top-24">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-purple-900">
+            <div className="bg-white rounded-xl border border-purple-200 p-4 shadow-lg lg:sticky lg:top-24">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-semibold text-purple-900">
                   Filters & Sort
                 </h3>
                 <button
                   onClick={clearFilters}
-                  className="text-sm font-medium text-purple-600 hover:text-purple-800 hover:bg-purple-50 px-3 py-1 rounded-lg transition-colors"
+                  className="text-xs font-medium text-purple-600 hover:text-purple-800 hover:bg-purple-50 px-2 py-1 rounded-md transition-colors"
                 >
                   Clear all
                 </button>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {/* Category Filter */}
                 <div>
-                  <label className="block text-sm font-semibold text-purple-800 mb-3">
+                  <label className="block text-xs font-semibold text-purple-800 mb-2">
                     Category
                   </label>
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <label className="flex items-center cursor-pointer group">
                       <input
                         type="radio"
@@ -279,18 +279,18 @@ export default function ProductsPageClient({
                         className="sr-only"
                       />
                       <div
-                        className={`w-4 h-4 rounded-full border-2 mr-3 flex items-center justify-center transition-all duration-200 ${
+                        className={`w-3 h-3 rounded-full border-2 mr-2 flex items-center justify-center transition-all duration-200 ${
                           selectedCategory === ""
                             ? "border-purple-600 bg-purple-600"
                             : "border-purple-300 group-hover:border-purple-400"
                         }`}
                       >
                         {selectedCategory === "" && (
-                          <div className="w-2 h-2 rounded-full bg-white"></div>
+                          <div className="w-1.5 h-1.5 rounded-full bg-white"></div>
                         )}
                       </div>
                       <span
-                        className={`text-sm transition-colors ${
+                        className={`text-xs transition-colors ${
                           selectedCategory === ""
                             ? "text-purple-900 font-medium"
                             : "text-purple-700 group-hover:text-purple-800"
@@ -313,18 +313,18 @@ export default function ProductsPageClient({
                           className="sr-only"
                         />
                         <div
-                          className={`w-4 h-4 rounded-full border-2 mr-3 flex items-center justify-center transition-all duration-200 ${
+                          className={`w-3 h-3 rounded-full border-2 mr-2 flex items-center justify-center transition-all duration-200 ${
                             selectedCategory === category.slug
                               ? "border-purple-600 bg-purple-600"
                               : "border-purple-300 group-hover:border-purple-400"
                           }`}
                         >
                           {selectedCategory === category.slug && (
-                            <div className="w-2 h-2 rounded-full bg-white"></div>
+                            <div className="w-1.5 h-1.5 rounded-full bg-white"></div>
                           )}
                         </div>
                         <span
-                          className={`text-sm transition-colors ${
+                          className={`text-xs transition-colors ${
                             selectedCategory === category.slug
                               ? "text-purple-900 font-medium"
                               : "text-purple-700 group-hover:text-purple-800"
@@ -339,10 +339,10 @@ export default function ProductsPageClient({
 
                 {/* Sort By */}
                 <div>
-                  <label className="block text-sm font-semibold text-purple-800 mb-3">
+                  <label className="block text-xs font-semibold text-purple-800 mb-2">
                     Sort By
                   </label>
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     {[
                       { value: "", label: "Featured" },
                       { value: "price-low", label: "Price: Low to High" },
@@ -363,18 +363,18 @@ export default function ProductsPageClient({
                           className="sr-only"
                         />
                         <div
-                          className={`w-4 h-4 rounded-full border-2 mr-3 flex items-center justify-center transition-all duration-200 ${
+                          className={`w-3 h-3 rounded-full border-2 mr-2 flex items-center justify-center transition-all duration-200 ${
                             sortBy === option.value
                               ? "border-purple-600 bg-purple-600"
                               : "border-purple-300 group-hover:border-purple-400"
                           }`}
                         >
                           {sortBy === option.value && (
-                            <div className="w-2 h-2 rounded-full bg-white"></div>
+                            <div className="w-1.5 h-1.5 rounded-full bg-white"></div>
                           )}
                         </div>
                         <span
-                          className={`text-sm transition-colors ${
+                          className={`text-xs transition-colors ${
                             sortBy === option.value
                               ? "text-purple-900 font-medium"
                               : "text-purple-700 group-hover:text-purple-800"
@@ -393,16 +393,16 @@ export default function ProductsPageClient({
           {/* Right Content - Search & Products */}
           <div className="flex-1 min-w-0">
             {/* Search Bar */}
-            <div className="bg-white rounded-2xl border border-purple-200 p-4 sm:p-6 shadow-lg mb-6">
+            <div className="bg-white rounded-xl border border-purple-200 p-3 sm:p-4 shadow-lg mb-4">
               <div className="relative">
-                <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 sm:h-6 sm:w-6 text-purple-500" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-purple-500" />
                 <input
                   type="text"
                   placeholder="Search products..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-4 text-base sm:text-lg border-2 border-purple-200 rounded-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-100 outline-none text-purple-900 placeholder-purple-400 transition-all duration-300"
+                  className="w-full pl-9 pr-3 py-2.5 text-sm border-2 border-purple-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-100 outline-none text-purple-900 placeholder-purple-400 transition-all duration-300"
                 />
               </div>
             </div>
@@ -418,7 +418,7 @@ export default function ProductsPageClient({
                 </h3>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
                 {products.map((product) => (
                   <ProductCard key={product._id} product={product} />
                 ))}

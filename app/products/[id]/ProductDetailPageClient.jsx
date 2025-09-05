@@ -2,8 +2,18 @@
 import { useState, useEffect } from "react";
 import CenteredCartModal from "../../../components/ui/CenteredCartModal";
 import Link from "next/link";
-import { Star, Heart, Truck, Shield } from "lucide-react";
+import {
+  Star,
+  Heart,
+  Truck,
+  Shield,
+  ShoppingCart,
+  Loader2,
+} from "lucide-react";
 import { truncateText } from "../../../lib/utils";
+import { addToCart } from "../../../app/actions/cart";
+import { showSuccessToast, showErrorToast } from "../../../lib/toast-utils";
+import { isAuthenticated } from "../../../lib/auth-utils";
 
 export default function ProductDetailPageClient({
   product,
@@ -15,6 +25,22 @@ export default function ProductDetailPageClient({
   const [selectedColor, setSelectedColor] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+
+  // Set default size and color when product loads
+  useEffect(() => {
+    if (product) {
+      // Set first available size as default
+      if (product.sizes && product.sizes.length > 0 && !selectedSize) {
+        setSelectedSize(product.sizes[0]);
+      }
+
+      // Set first available color as default
+      if (product.colors && product.colors.length > 0 && !selectedColor) {
+        setSelectedColor(product.colors[0]);
+      }
+    }
+  }, [product, selectedSize, selectedColor]);
 
   // Calculate discount
   const hasDiscount = product.discount && product.discount > 0;
@@ -33,6 +59,43 @@ export default function ProductDetailPageClient({
       : [
           "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&h=800&fit=crop",
         ];
+
+  // Handle add to cart
+  const handleAddToCart = async () => {
+    if (!isAuthenticated()) {
+      showErrorToast("Please login to add items to cart");
+      return;
+    }
+
+    // Get the current selected size and color (with defaults)
+    const currentSize =
+      selectedSize ||
+      (product.sizes && product.sizes.length > 0 ? product.sizes[0] : null);
+    const currentColor =
+      selectedColor ||
+      (product.colors && product.colors.length > 0 ? product.colors[0] : null);
+
+    setIsAddingToCart(true);
+
+    try {
+      const result = await addToCart(
+        product._id || product.id,
+        quantity,
+        currentSize,
+        currentColor
+      );
+
+      if (result.success) {
+        showSuccessToast("Item added to cart successfully");
+      } else {
+        showErrorToast(result.error || "Failed to add item to cart");
+      }
+    } catch (error) {
+      showErrorToast("Failed to add item to cart");
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
 
   // Keyboard navigation for images
   useEffect(() => {
@@ -413,8 +476,30 @@ export default function ProductDetailPageClient({
                 </div>
 
                 <div className="flex gap-3">
-                  <button className="h-12 flex-1 rounded-lg bg-purple-900 text-white font-semibold hover:bg-purple-800 transition-colors">
-                    Add to Cart
+                  <button
+                    onClick={handleAddToCart}
+                    disabled={isAddingToCart || !product.inStock}
+                    className={`h-12 flex-1 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 ${
+                      !product.inStock
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : isAddingToCart
+                        ? "bg-purple-700 text-white cursor-not-allowed"
+                        : "bg-purple-900 text-white hover:bg-purple-800"
+                    }`}
+                  >
+                    {isAddingToCart ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        Adding...
+                      </>
+                    ) : !product.inStock ? (
+                      "Out of Stock"
+                    ) : (
+                      <>
+                        <ShoppingCart className="h-5 w-5" />
+                        Add to Cart
+                      </>
+                    )}
                   </button>
                   <CenteredCartModal
                     trigger={
