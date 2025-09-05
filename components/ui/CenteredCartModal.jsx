@@ -12,6 +12,7 @@ import {
 } from "../../app/actions/cart";
 import { showSuccessToast, showErrorToast } from "../../lib/toast-utils";
 import { truncateText } from "../../lib/utils";
+import { useCartState } from "../../lib/hooks/useCartState";
 
 export default function CenteredCartModal({
   trigger,
@@ -23,6 +24,7 @@ export default function CenteredCartModal({
   const [isUpdating, setIsUpdating] = useState({});
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const router = useRouter();
+  const { refreshCart } = useCartState();
 
   // Use external state if provided, otherwise use internal state
   const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
@@ -73,6 +75,8 @@ export default function CenteredCartModal({
       if (result.success) {
         setCart(result.data);
         showSuccessToast("Cart updated successfully");
+        // Refresh global cart state to update all product cards
+        refreshCart();
       } else {
         showErrorToast(result.error || "Failed to update cart");
       }
@@ -92,6 +96,8 @@ export default function CenteredCartModal({
       if (result.success) {
         setCart(result.data);
         showSuccessToast("Item removed from cart");
+        // Refresh global cart state to update all product cards
+        refreshCart();
       } else {
         showErrorToast(result.error || "Failed to remove item");
       }
@@ -111,6 +117,8 @@ export default function CenteredCartModal({
       if (result.success) {
         setCart(result.data);
         showSuccessToast("Cart cleared successfully");
+        // Refresh global cart state to update all product cards
+        refreshCart();
       } else {
         showErrorToast(result.error || "Failed to clear cart");
       }

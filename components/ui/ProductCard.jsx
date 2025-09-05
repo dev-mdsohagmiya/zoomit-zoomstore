@@ -3,15 +3,19 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Star, ShoppingCart, Plus, Loader2 } from "lucide-react";
 import { truncateText } from "../../lib/utils";
-import { addToCart, getCart } from "../../app/actions/cart";
+import { addToCart } from "../../app/actions/cart";
 import { showSuccessToast, showErrorToast } from "../../lib/toast-utils";
 import { isAuthenticated } from "../../lib/auth-utils";
+import { useCartState } from "../../lib/hooks/useCartState";
 import CenteredCartModal from "./CenteredCartModal";
 
 export default function ProductCard({ product }) {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
-  const [isInCart, setIsInCart] = useState(false);
   const [showCartModal, setShowCartModal] = useState(false);
+  const { isProductInCart, refreshCart } = useCartState();
+
+  // Check if product is in cart using global state
+  const isInCart = isProductInCart(product._id || product.id);
 
   // Calculate prices first
   const originalPrice = product.price || 0;
@@ -25,31 +29,6 @@ export default function ProductCard({ product }) {
 
   // Check if there's a discount
   const hasDiscount = discountPercentage > 0;
-
-  // Fetch cart data to check if product is in cart
-  const fetchCartData = async () => {
-    if (!isAuthenticated()) return;
-
-    try {
-      const result = await getCart();
-      if (result.success && result.data) {
-        // Check if current product is in cart
-        const productInCart =
-          result.data.items?.some(
-            (item) =>
-              item.product._id === product._id || item.product.id === product.id
-          ) || false;
-        setIsInCart(productInCart);
-      }
-    } catch (error) {
-      console.error("Error fetching cart data:", error);
-    }
-  };
-
-  // Load cart data on component mount
-  useEffect(() => {
-    fetchCartData();
-  }, []);
 
   // Handle add to cart
   const handleAddToCart = async (e) => {
@@ -87,9 +66,8 @@ export default function ProductCard({ product }) {
 
       if (result.success) {
         showSuccessToast("Item added to cart successfully");
-        // Update cart state
-        await fetchCartData();
-        setIsInCart(true);
+        // Refresh global cart state
+        refreshCart();
       } else {
         showErrorToast(result.error || "Failed to add item to cart");
       }
@@ -248,6 +226,8 @@ export default function ProductCard({ product }) {
               ? "bg-gray-300 text-gray-500 cursor-not-allowed"
               : isAddingToCart
               ? "bg-purple-700 text-white cursor-not-allowed"
+              : isInCart
+              ? "bg-white text-purple-900 border-2 border-purple-200 hover:bg-purple-50 hover:border-purple-300"
               : "bg-purple-900 text-white hover:bg-purple-800"
           }`}
         >

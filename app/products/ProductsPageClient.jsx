@@ -147,12 +147,15 @@ export default function ProductsPageClient({
     setSearchTerm("");
     setSelectedCategory("");
     setSortBy("");
+    setSelectedPriceRange("All Prices");
     updateURL({
       search: "",
       category: "",
       sort: "",
       page: 1,
     });
+    // Fetch default products when clearing filters
+    refreshData();
   };
 
   // Handle key press for search

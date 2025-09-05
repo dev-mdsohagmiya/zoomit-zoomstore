@@ -236,20 +236,22 @@ export default function HeroSection({ heroProduct }) {
                           />
                         </div>
                         <div className="flex-1">
-                          <div className="font-semibold text-slate-900 group-hover:text-purple-900 transition-colors">
-                            {heroProduct.name}
+                          <div className="font-semibold text-slate-900 group-hover:text-purple-900 transition-colors text-sm">
+                            {heroProduct.name?.length > 25
+                              ? `${heroProduct.name.substring(0, 25)}...`
+                              : heroProduct.name}
                           </div>
-                          <div className="text-sm text-slate-600">
+                          <div className="text-xs text-slate-600">
                             ৳{heroProduct.price?.toLocaleString()} • ⭐⭐⭐⭐⭐
-                            ({heroProduct.numReviews || 0} reviews)
+                            ({heroProduct.numReviews || 0})
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-lg font-bold text-purple-900">
+                          <div className="text-sm font-bold text-purple-900">
                             ৳{heroProduct.price?.toLocaleString()}
                           </div>
                           {heroProduct.discount && heroProduct.discount > 0 && (
-                            <div className="text-sm text-slate-500 line-through">
+                            <div className="text-xs text-slate-500 line-through">
                               ৳
                               {Math.round(
                                 heroProduct.price /

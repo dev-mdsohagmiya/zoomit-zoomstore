@@ -3,6 +3,7 @@ import "./globals.css";
 import NavbarWrapper from "../components/ui/NavbarWrapper.jsx";
 import FooterWrapper from "../components/ui/FooterWrapper.jsx";
 import ToastProvider from "../components/providers/ToastProvider";
+import { CartProvider } from "../lib/hooks/useCartState";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -33,10 +34,12 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${jakarta.className} antialiased`}>
-        <ToastProvider />
-        <NavbarWrapper />
-        {children}
-        <FooterWrapper />
+        <CartProvider>
+          <ToastProvider />
+          <NavbarWrapper />
+          {children}
+          <FooterWrapper />
+        </CartProvider>
       </body>
     </html>
   );
