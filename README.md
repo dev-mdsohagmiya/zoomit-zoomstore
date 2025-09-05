@@ -6,6 +6,12 @@ _Assalamualaikum, dear reviewers, this is a task for the role of Front-End/MERN 
 
 _(Some features are still in development and need improvement in various areas. There are also some errors that need to be fixed. I was quite busy, which is why I couldn't complete everything perfectly. Please don't mind and give me a chance - I will try to make it ready as soon as possible. Thank you for your understanding.)_
 
+**🔐 Admin Dashboard Access:**
+If you want to check the admin dashboard, you need to be logged in as an admin. Here are the test super admin credentials:
+
+- **Email:** `super@gmail.com`
+- **Password:** `ppooiiUU1122@@`
+
 [![Watch the Video](./public/docs/youtube.jpg)](https://youtu.be/your-video-id)
 
 _Click the image to watch the video_
