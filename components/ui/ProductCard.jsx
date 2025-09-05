@@ -1,14 +1,17 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Star, ShoppingCart, Plus, Loader2 } from "lucide-react";
 import { truncateText } from "../../lib/utils";
-import { addToCart } from "../../app/actions/cart";
+import { addToCart, getCart } from "../../app/actions/cart";
 import { showSuccessToast, showErrorToast } from "../../lib/toast-utils";
 import { isAuthenticated } from "../../lib/auth-utils";
+import CenteredCartModal from "./CenteredCartModal";
 
 export default function ProductCard({ product }) {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isInCart, setIsInCart] = useState(false);
+  const [showCartModal, setShowCartModal] = useState(false);
 
   // Calculate prices first
   const originalPrice = product.price || 0;
@@ -22,6 +25,31 @@ export default function ProductCard({ product }) {
 
   // Check if there's a discount
   const hasDiscount = discountPercentage > 0;
+
+  // Fetch cart data to check if product is in cart
+  const fetchCartData = async () => {
+    if (!isAuthenticated()) return;
+
+    try {
+      const result = await getCart();
+      if (result.success && result.data) {
+        // Check if current product is in cart
+        const productInCart =
+          result.data.items?.some(
+            (item) =>
+              item.product._id === product._id || item.product.id === product.id
+          ) || false;
+        setIsInCart(productInCart);
+      }
+    } catch (error) {
+      console.error("Error fetching cart data:", error);
+    }
+  };
+
+  // Load cart data on component mount
+  useEffect(() => {
+    fetchCartData();
+  }, []);
 
   // Handle add to cart
   const handleAddToCart = async (e) => {
@@ -59,6 +87,9 @@ export default function ProductCard({ product }) {
 
       if (result.success) {
         showSuccessToast("Item added to cart successfully");
+        // Update cart state
+        await fetchCartData();
+        setIsInCart(true);
       } else {
         showErrorToast(result.error || "Failed to add item to cart");
       }
@@ -208,9 +239,9 @@ export default function ProductCard({ product }) {
           {categoryName}
         </div>
 
-        {/* Add to Cart Button */}
+        {/* Add to Cart / View Cart Button */}
         <button
-          onClick={handleAddToCart}
+          onClick={isInCart ? () => setShowCartModal(true) : handleAddToCart}
           disabled={isAddingToCart || !product.inStock}
           className={`w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 flex items-center justify-center gap-2 ${
             !product.inStock
@@ -227,6 +258,11 @@ export default function ProductCard({ product }) {
             </>
           ) : !product.inStock ? (
             "Out of Stock"
+          ) : isInCart ? (
+            <>
+              <ShoppingCart className="h-4 w-4" />
+              View Cart
+            </>
           ) : (
             <>
               <ShoppingCart className="h-4 w-4" />
@@ -234,6 +270,13 @@ export default function ProductCard({ product }) {
             </>
           )}
         </button>
+
+        {/* Cart Modal */}
+        <CenteredCartModal
+          trigger={<div style={{ display: "none" }} />}
+          isOpen={showCartModal}
+          onOpenChange={setShowCartModal}
+        />
       </div>
     </div>
   );

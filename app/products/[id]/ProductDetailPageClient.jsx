@@ -11,7 +11,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { truncateText } from "../../../lib/utils";
-import { addToCart } from "../../../app/actions/cart";
+import { addToCart, getCart } from "../../../app/actions/cart";
 import { showSuccessToast, showErrorToast } from "../../../lib/toast-utils";
 import { isAuthenticated } from "../../../lib/auth-utils";
 
@@ -26,6 +26,9 @@ export default function ProductDetailPageClient({
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [cartItemCount, setCartItemCount] = useState(0);
+  const [showCartModal, setShowCartModal] = useState(false);
+  const [isInCart, setIsInCart] = useState(false);
 
   // Set default size and color when product loads
   useEffect(() => {
@@ -41,6 +44,35 @@ export default function ProductDetailPageClient({
       }
     }
   }, [product, selectedSize, selectedColor]);
+
+  // Fetch cart data to get item count and check if current product is in cart
+  const fetchCartData = async () => {
+    if (!isAuthenticated()) return;
+
+    try {
+      const result = await getCart();
+      if (result.success && result.data) {
+        const totalItems =
+          result.data.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+        setCartItemCount(totalItems);
+
+        // Check if current product is in cart
+        const productInCart =
+          result.data.items?.some(
+            (item) =>
+              item.product._id === product._id || item.product.id === product.id
+          ) || false;
+        setIsInCart(productInCart);
+      }
+    } catch (error) {
+      console.error("Error fetching cart data:", error);
+    }
+  };
+
+  // Load cart data on component mount
+  useEffect(() => {
+    fetchCartData();
+  }, []);
 
   // Calculate discount
   const hasDiscount = product.discount && product.discount > 0;
@@ -87,6 +119,9 @@ export default function ProductDetailPageClient({
 
       if (result.success) {
         showSuccessToast("Item added to cart successfully");
+        // Update cart count and set product as in cart
+        await fetchCartData();
+        setIsInCart(true);
       } else {
         showErrorToast(result.error || "Failed to add item to cart");
       }
@@ -477,7 +512,9 @@ export default function ProductDetailPageClient({
 
                 <div className="flex gap-3">
                   <button
-                    onClick={handleAddToCart}
+                    onClick={
+                      isInCart ? () => setShowCartModal(true) : handleAddToCart
+                    }
                     disabled={isAddingToCart || !product.inStock}
                     className={`h-12 flex-1 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 ${
                       !product.inStock
@@ -494,6 +531,11 @@ export default function ProductDetailPageClient({
                       </>
                     ) : !product.inStock ? (
                       "Out of Stock"
+                    ) : isInCart ? (
+                      <>
+                        <ShoppingCart className="h-5 w-5" />
+                        View Cart
+                      </>
                     ) : (
                       <>
                         <ShoppingCart className="h-5 w-5" />
@@ -502,11 +544,9 @@ export default function ProductDetailPageClient({
                     )}
                   </button>
                   <CenteredCartModal
-                    trigger={
-                      <button className="h-12 px-6 rounded-lg border-2 border-purple-300 text-purple-700 font-semibold hover:bg-purple-50 transition-colors">
-                        View Cart
-                      </button>
-                    }
+                    trigger={<div style={{ display: "none" }} />}
+                    isOpen={showCartModal}
+                    onOpenChange={setShowCartModal}
                   />
                 </div>
 

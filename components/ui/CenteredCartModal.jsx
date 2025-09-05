@@ -13,12 +13,20 @@ import {
 import { showSuccessToast, showErrorToast } from "../../lib/toast-utils";
 import { truncateText } from "../../lib/utils";
 
-export default function CenteredCartModal({ trigger }) {
+export default function CenteredCartModal({
+  trigger,
+  isOpen: externalIsOpen,
+  onOpenChange: externalOnOpenChange,
+}) {
   const [cart, setCart] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState({});
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
   const router = useRouter();
+
+  // Use external state if provided, otherwise use internal state
+  const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
+  const setIsOpen = externalOnOpenChange || setInternalIsOpen;
 
   // Fetch cart data
   const fetchCart = async () => {
