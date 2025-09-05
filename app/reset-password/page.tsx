@@ -98,8 +98,8 @@ export default function ResetPasswordPage() {
                 Secure Password Recovery
               </h2>
               <p className="text-purple-700 text-sm leading-relaxed">
-                Don&apos;t worry, it happens to the best of us. We&apos;ll help you get
-                back into your account quickly and securely.
+                Don&apos;t worry, it happens to the best of us. We&apos;ll help
+                you get back into your account quickly and securely.
               </p>
             </div>
 

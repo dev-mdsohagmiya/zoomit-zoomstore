@@ -90,14 +90,13 @@ export default function RegisterForm() {
           href="/"
           className="flex items-center space-x-3 mb-6 hover:opacity-80 transition-opacity"
         >
-          <div className="w-8 h-8 rounded-lg overflow-hidden bg-purple-100 p-1.5">
+          <div className="">
             <img
-              src="/zoomitlogo.png"
+              src="/logo.png"
               alt="ZoomStore"
-              className="h-full w-full object-contain"
+              className="h-full w-32 object-contain "
             />
           </div>
-          <span className="text-xl font-bold text-purple-900">ZoomStore</span>
         </Link>
 
         <div>
