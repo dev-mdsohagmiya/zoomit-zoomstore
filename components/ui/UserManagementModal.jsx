@@ -16,10 +16,12 @@ export default function UserManagementModal({
   onSave,
   user,
   mode = "add",
+  userRole = "user",
 }) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    password: "",
     role: "user",
     status: "active",
   });
@@ -30,6 +32,7 @@ export default function UserManagementModal({
       setFormData({
         name: user.name || "",
         email: user.email || "",
+        password: "", // Don't pre-fill password for edit
         role: user.role || "user",
         status: user.status || "active",
       });
@@ -37,7 +40,8 @@ export default function UserManagementModal({
       setFormData({
         name: "",
         email: "",
-        role: "user",
+        password: "",
+        role: mode === "addAdmin" ? "admin" : "user",
         status: "active",
       });
     }
@@ -48,29 +52,31 @@ export default function UserManagementModal({
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Create FormData for multipart/form-data
+      const formDataToSend = new FormData();
 
-      const userData = {
-        ...(mode === "edit" ? user : {}),
-        ...formData,
-        id: mode === "edit" ? user.id : Date.now(),
-        avatar:
-          mode === "edit"
-            ? user.avatar
-            : formData.name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")
-                .toUpperCase(),
-        joinDate:
-          mode === "edit"
-            ? user.joinDate
-            : new Date().toISOString().split("T")[0],
-        lastLogin: mode === "edit" ? user.lastLogin : "Never",
-      };
+      // Add all form fields
+      formDataToSend.append("name", formData.name);
+      formDataToSend.append("email", formData.email);
+      formDataToSend.append("role", formData.role);
+      formDataToSend.append("status", formData.status);
 
-      onSave(userData);
+      // Add password only for create operations
+      if ((mode === "add" || mode === "addAdmin") && formData.password) {
+        formDataToSend.append("password", formData.password);
+      }
+
+      // Add address if provided
+      if (formData.address) {
+        formDataToSend.append("address", JSON.stringify(formData.address));
+      }
+
+      // Add photo file if selected
+      if (formData.photo && formData.photo instanceof File) {
+        formDataToSend.append("photo", formData.photo);
+      }
+
+      onSave(formDataToSend);
       handleClose();
     } catch (error) {
       console.error(
@@ -93,11 +99,25 @@ export default function UserManagementModal({
     });
   };
 
-  const roles = [
-    { value: "user", label: "User" },
-    { value: "admin", label: "Admin" },
-    { value: "superadmin", label: "Super Admin" },
-  ];
+  // Role options based on current user's role
+  const getRoleOptions = () => {
+    if (userRole === "superadmin") {
+      return [
+        { value: "user", label: "User" },
+        { value: "admin", label: "Admin" },
+        { value: "superadmin", label: "Super Admin" },
+      ];
+    } else if (userRole === "admin") {
+      return [
+        { value: "user", label: "User" },
+        { value: "admin", label: "Admin" },
+      ];
+    } else {
+      return [{ value: "user", label: "User" }];
+    }
+  };
+
+  const roles = getRoleOptions();
 
   const statuses = [
     { value: "active", label: "Active" },
@@ -108,10 +128,14 @@ export default function UserManagementModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {mode === "edit" ? "Edit User" : "Add New User"}
+            {mode === "edit"
+              ? "Edit User"
+              : mode === "addAdmin"
+              ? "Add New Admin"
+              : "Add New User"}
           </DialogTitle>
         </DialogHeader>
 
@@ -145,6 +169,49 @@ export default function UserManagementModal({
             </div>
           </div>
 
+          {/* Password field - only show for add modes */}
+          {(mode === "add" || mode === "addAdmin") && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Password *
+              </label>
+              <Input
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Enter password"
+                required
+                minLength={6}
+              />
+            </div>
+          )}
+
+          {/* Photo field */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Photo
+            </label>
+            <input
+              name="photo"
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files[0];
+                setFormData({
+                  ...formData,
+                  photo: file,
+                });
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
+            {formData.photo && (
+              <p className="text-sm text-gray-500 mt-1">
+                Selected: {formData.photo.name}
+              </p>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -156,6 +223,7 @@ export default function UserManagementModal({
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 required
+                disabled={mode === "addAdmin"} // Disable role selection for admin creation
               >
                 {roles.map((role) => (
                   <option key={role.value} value={role.value}>
@@ -259,4 +327,3 @@ export default function UserManagementModal({
     </Dialog>
   );
 }
-
