@@ -30,7 +30,7 @@ export default function ResetPasswordPage() {
                 Reset Password
               </h1>
               <p className="text-base text-purple-600">
-                Enter your email and we'll send you a reset link
+                Enter your email and we&apos;ll send you a reset link
               </p>
             </div>
           </div>
@@ -98,7 +98,7 @@ export default function ResetPasswordPage() {
                 Secure Password Recovery
               </h2>
               <p className="text-purple-700 text-sm leading-relaxed">
-                Don't worry, it happens to the best of us. We'll help you get
+                Don&apos;t worry, it happens to the best of us. We&apos;ll help you get
                 back into your account quickly and securely.
               </p>
             </div>

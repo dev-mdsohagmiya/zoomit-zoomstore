@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import CheckoutPageClient from "./CheckoutPageClient";
 import { getCart } from "../actions/cart";
 
@@ -32,12 +33,12 @@ export default async function CheckoutPage() {
           <p className="text-gray-600 mb-6">
             Add some products to your cart before checkout
           </p>
-          <a
+          <Link
             href="/products"
             className="inline-flex items-center px-6 py-3 bg-purple-900 text-white rounded-lg hover:bg-purple-800 transition-colors"
           >
             Continue Shopping
-          </a>
+          </Link>
         </div>
       </div>
     );

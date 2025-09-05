@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import AdminLayout from "../../../../components/ui/AdminLayout";
 import AdminCartDetailsPageClient from "../../../../components/admin/AdminCartDetailsPageClient";
 import { getUserCart } from "../../../actions/admin-cart";
@@ -27,12 +28,12 @@ export default async function AdminCartDetailsPage({ params }) {
     <AdminLayout>
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-4">
-          <a
+          <Link
             href="/admin/carts"
             className="text-purple-600 hover:text-purple-800 transition-colors"
           >
             ← Back to Carts
-          </a>
+          </Link>
         </div>
         <h1 className="text-3xl font-bold text-gray-900">
           Cart Details - {cart.user.name}
