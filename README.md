@@ -4,6 +4,8 @@
 
 _Assalamualaikum, dear reviewers, this is a task for the role of Front-End/MERN Developer Intern at ZoomIt. I just created a name for this assignment based on the company name, calling it ZoomStore. As per the requirements, I have built it using Next.js 15, React, JavaScript, Node.js, and Express.js with modern web technologies. Additionally, I have added some extra features for better performance and user experience, such as Global State Management, Real-time Cart Updates, Image Optimization with Cloudinary, Payment Checkout with stripe and comprehensive Admin Panel, which are explained in detail below._ (video coming soon)
 
+_(Some features are still in development and need improvement in various areas. There are also some errors that need to be fixed. I was quite busy, which is why I couldn't complete everything perfectly. Please don't mind and give me a chance - I will try to make it ready as soon as possible. Thank you for your understanding.)_
+
 [![Watch the Video](./public/docs/youtube.jpg)](https://youtu.be/your-video-id)
 
 _Click the image to watch the video_
