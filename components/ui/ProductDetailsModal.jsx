@@ -115,10 +115,10 @@ export default function ProductDetailsModal({ isOpen, onClose, product }) {
                       {priceInfo.discount > 0 ? (
                         <div>
                           <div className="text-green-600 font-bold text-lg">
-                            ${priceInfo.discounted.toFixed(2)}
+                            ৳{priceInfo.discounted.toFixed(2)}
                           </div>
                           <div className="text-sm text-gray-500 line-through">
-                            ${priceInfo.original.toFixed(2)}
+                            ৳{priceInfo.original.toFixed(2)}
                           </div>
                           <div className="text-xs text-red-600 font-medium">
                             {priceInfo.discount}% OFF
@@ -126,7 +126,7 @@ export default function ProductDetailsModal({ isOpen, onClose, product }) {
                         </div>
                       ) : (
                         <div className="text-gray-900 font-bold text-lg">
-                          ${priceInfo.original.toFixed(2)}
+                          ৳{priceInfo.original.toFixed(2)}
                         </div>
                       )}
                     </div>

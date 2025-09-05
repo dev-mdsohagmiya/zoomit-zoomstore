@@ -5,7 +5,6 @@ import {
   Edit,
   Trash2,
   Package,
-  DollarSign,
   Star,
   Eye,
   Search,
@@ -109,12 +108,41 @@ export default function ProductsPageClient({
     fetchAllProductsForStats();
   }, []);
 
+  // Handle search term changes - when search becomes empty, show default products
+  useEffect(() => {
+    if (searchTerm === "" && !selectedCategory && !minPrice && !maxPrice) {
+      // Only fetch default products if no other filters are active
+      const fetchDefaultProducts = async () => {
+        try {
+          setIsLoading(true);
+          const result = await getProducts(1, productsPerPage, {});
+
+          if (result.success) {
+            setProducts(result.data.products);
+            setCurrentPage(result.data.pagination.page);
+            setTotalPages(result.data.pagination.pages);
+            setTotalProductsCount(result.data.pagination.total);
+          }
+        } catch (error) {
+          console.error("Error fetching default products:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      // Add a small delay to avoid too many API calls
+      const timeoutId = setTimeout(fetchDefaultProducts, 300);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [searchTerm, selectedCategory, minPrice, maxPrice, productsPerPage]);
+
   // Search and filter functions
   const handleSearch = async (page = 1) => {
     setIsLoading(true);
     try {
       const filters = {};
 
+      // Only add search filter if search term is not empty
       if (searchTerm.trim()) {
         filters.search = searchTerm.trim();
       }
@@ -164,10 +192,33 @@ export default function ProductsPageClient({
     setSortBy("newest");
     setCurrentPage(1);
 
-    // Reset to initial products
-    setProducts(initialProducts);
-    setTotalProductsCount(initialProducts.length);
-    setTotalPages(1);
+    // Fetch first page of products from API
+    try {
+      setIsLoading(true);
+      const result = await getProducts(1, productsPerPage, {});
+
+      if (result.success) {
+        setProducts(result.data.products);
+        setCurrentPage(result.data.pagination.page);
+        setTotalPages(result.data.pagination.pages);
+        setTotalProductsCount(result.data.pagination.total);
+      } else {
+        showErrorToast(result.error);
+        // Fallback to initial products
+        setProducts(initialProducts);
+        setTotalProductsCount(initialProducts.length);
+        setTotalPages(1);
+      }
+    } catch (error) {
+      console.error("Error clearing filters:", error);
+      showErrorToast("Failed to clear filters. Please try again.");
+      // Fallback to initial products
+      setProducts(initialProducts);
+      setTotalProductsCount(initialProducts.length);
+      setTotalPages(1);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -196,7 +247,8 @@ export default function ProductsPageClient({
   };
 
   // Create product using server action
-  const handleCreateProduct = async (productData) => {
+  const handleCreateProduct = async (formData) => {
+    console.log("handleCreateProduct called with FormData");
     try {
       const token = getStoredToken();
       if (!token) {
@@ -204,34 +256,16 @@ export default function ProductsPageClient({
         return;
       }
 
-      // Create FormData for the server action
-      const formData = new FormData();
-      formData.append("name", productData.name);
-      formData.append("description", productData.description);
-      formData.append("price", productData.price.toString());
-      formData.append("discount", (productData.discount || 0).toString());
-      formData.append("stock", (productData.stock || 0).toString());
-
-      // Add categories if selected
-      if (productData.categories && productData.categories.length > 0) {
-        productData.categories.forEach((categoryId) => {
-          formData.append("categories", categoryId);
-        });
-      }
-
-      // Add photos if selected
-      if (productData.photos && productData.photos.length > 0) {
-        productData.photos.forEach((photo) => {
-          formData.append("photos", photo);
-        });
-      }
-
+      console.log("Calling createProduct server action");
       const result = await createProduct(formData, token);
+      console.log("createProduct result:", result);
 
       if (result.success) {
         showSuccessToast(result.message);
         // Add the new product to the top of the list (latest first)
         setProducts((prev) => [result.data, ...prev]);
+        // Update total count for statistics
+        setTotalProductsCount((prev) => prev + 1);
         setIsModalOpen(false);
       } else {
         showErrorToast(result.error);
@@ -243,7 +277,9 @@ export default function ProductsPageClient({
   };
 
   // Update product using server action
-  const handleUpdateProduct = async (productData) => {
+  const handleUpdateProduct = async (formData) => {
+    console.log("handleUpdateProduct called with FormData");
+    console.log("Editing product ID:", editingProduct._id);
     try {
       const token = getStoredToken();
       if (!token) {
@@ -251,29 +287,9 @@ export default function ProductsPageClient({
         return;
       }
 
-      // Create FormData for the server action
-      const formData = new FormData();
-      formData.append("name", productData.name);
-      formData.append("description", productData.description);
-      formData.append("price", productData.price.toString());
-      formData.append("discount", (productData.discount || 0).toString());
-      formData.append("stock", (productData.stock || 0).toString());
-
-      // Add categories if selected
-      if (productData.categories && productData.categories.length > 0) {
-        productData.categories.forEach((categoryId) => {
-          formData.append("categories", categoryId);
-        });
-      }
-
-      // Add photos if selected
-      if (productData.photos && productData.photos.length > 0) {
-        productData.photos.forEach((photo) => {
-          formData.append("photos", photo);
-        });
-      }
-
+      console.log("Calling updateProduct server action");
       const result = await updateProduct(editingProduct._id, formData, token);
+      console.log("updateProduct result:", result);
 
       if (result.success) {
         showSuccessToast(result.message);
@@ -315,6 +331,8 @@ export default function ProductsPageClient({
         setProducts((prev) =>
           prev.filter((prod) => prod._id !== productToDelete._id)
         );
+        // Update total count for statistics
+        setTotalProductsCount((prev) => Math.max(0, prev - 1));
         setDeleteModalOpen(false);
         setProductToDelete(null);
       } else {
@@ -739,15 +757,15 @@ export default function ProductsPageClient({
                           {priceInfo.discount > 0 ? (
                             <div>
                               <div className="text-green-600 font-medium">
-                                ${priceInfo.discounted.toFixed(2)}
+                                ৳{priceInfo.discounted.toFixed(2)}
                               </div>
                               <div className="text-xs text-gray-500 line-through">
-                                ${priceInfo.original.toFixed(2)}
+                                ৳{priceInfo.original.toFixed(2)}
                               </div>
                             </div>
                           ) : (
                             <div className="font-medium">
-                              ${priceInfo.original.toFixed(2)}
+                              ৳{priceInfo.original.toFixed(2)}
                             </div>
                           )}
                         </div>
@@ -758,10 +776,14 @@ export default function ProductsPageClient({
                         </div>
                         <div
                           className={`text-xs ${
-                            product.inStock ? "text-green-600" : "text-red-600"
+                            product.inStock && product.stock > 0
+                              ? "text-green-600"
+                              : "text-red-600"
                           }`}
                         >
-                          {product.inStock ? "In Stock" : "Out of Stock"}
+                          {product.inStock && product.stock > 0
+                            ? "In Stock"
+                            : "Out of Stock"}
                         </div>
                       </td>
                       <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
