@@ -178,6 +178,53 @@ export default function ProductDetailsModal({ isOpen, onClose, product }) {
             )}
           </div>
 
+          {/* Sizes and Colors */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Sizes */}
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Available Sizes
+              </h3>
+              {product.sizes && product.sizes.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {product.sizes.map((size, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
+                    >
+                      <Package className="h-3 w-3 mr-1 flex-shrink-0" />
+                      {size}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500">No sizes available</p>
+              )}
+            </div>
+
+            {/* Colors */}
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Available Colors
+              </h3>
+              {product.colors && product.colors.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {product.colors.map((color, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                    >
+                      <div className="w-3 h-3 rounded-full bg-gray-400 mr-2 flex-shrink-0"></div>
+                      {color}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500">No colors available</p>
+              )}
+            </div>
+          </div>
+
           {/* Reviews & Rating */}
           <div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">

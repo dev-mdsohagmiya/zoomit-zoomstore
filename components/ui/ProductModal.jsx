@@ -34,6 +34,8 @@ const productSchema = z.object({
     .optional(),
   stock: z.number().min(0, "Stock cannot be negative").optional(),
   categories: z.array(z.string()).optional(),
+  sizes: z.array(z.string()).optional(),
+  colors: z.array(z.string()).optional(),
 });
 
 export default function ProductModal({
@@ -48,6 +50,8 @@ export default function ProductModal({
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sizesInput, setSizesInput] = useState("");
+  const [colorsInput, setColorsInput] = useState("");
 
   const {
     register,
@@ -65,6 +69,8 @@ export default function ProductModal({
       discount: 0,
       stock: 0,
       categories: [],
+      sizes: [],
+      colors: [],
     },
   });
 
@@ -77,6 +83,12 @@ export default function ProductModal({
         setValue("price", product.price || 0);
         setValue("discount", product.discount || 0);
         setValue("stock", product.stock || 0);
+        setValue("sizes", product.sizes || []);
+        setValue("colors", product.colors || []);
+
+        // Set input values for display
+        setSizesInput((product.sizes || []).join(", "));
+        setColorsInput((product.colors || []).join(", "));
 
         // Set existing photos as previews
         setImagePreviews(product.photos || []);
@@ -87,12 +99,16 @@ export default function ProductModal({
         setSelectedCategories(categoryIds);
       } else {
         reset();
+        setSizesInput("");
+        setColorsInput("");
         setImagePreviews([]);
         setSelectedFiles([]);
         setSelectedCategories([]);
       }
     } else {
       reset();
+      setSizesInput("");
+      setColorsInput("");
       setImagePreviews([]);
       setSelectedFiles([]);
       setSelectedCategories([]);
@@ -199,6 +215,15 @@ export default function ProductModal({
     });
   };
 
+  // Helper function to parse comma-separated input
+  const parseCommaSeparated = (value) => {
+    if (!value || value.trim() === "") return [];
+    return value
+      .split(",")
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0);
+  };
+
   const handleFormSubmit = async (data) => {
     console.log("Form submitted with data:", data);
     console.log("Selected files:", selectedFiles.length);
@@ -228,6 +253,20 @@ export default function ProductModal({
       selectedCategories.forEach((categoryId) => {
         formData.append("categories", categoryId);
       });
+
+      // Add sizes as array - send each size separately
+      if (data.sizes && data.sizes.length > 0) {
+        data.sizes.forEach((size) => {
+          formData.append("sizes", size);
+        });
+      }
+
+      // Add colors as array - send each color separately
+      if (data.colors && data.colors.length > 0) {
+        data.colors.forEach((color) => {
+          formData.append("colors", color);
+        });
+      }
 
       // Add photos as files - multer expects 'photos' field name
       console.log(
@@ -450,6 +489,157 @@ export default function ProductModal({
                 {selectedCategories.length === 1 ? "y" : "ies"} selected
               </div>
             )}
+          </div>
+
+          {/* Sizes and Colors */}
+          <div className="space-y-6">
+            {/* Sizes */}
+            <div className="space-y-2">
+              <Label>Sizes</Label>
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    placeholder="Enter size (e.g., Small)"
+                    value={sizesInput}
+                    onChange={(e) => setSizesInput(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        if (sizesInput.trim()) {
+                          const currentSizes = watch("sizes") || [];
+                          const newSizes = [...currentSizes, sizesInput.trim()];
+                          setValue("sizes", newSizes);
+                          setSizesInput("");
+                        }
+                      }
+                    }}
+                    className="flex-1"
+                    disabled={isSubmitting}
+                  />
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      if (sizesInput.trim()) {
+                        const currentSizes = watch("sizes") || [];
+                        const newSizes = [...currentSizes, sizesInput.trim()];
+                        setValue("sizes", newSizes);
+                        setSizesInput("");
+                      }
+                    }}
+                    disabled={!sizesInput.trim() || isSubmitting}
+                    className="px-4"
+                  >
+                    Add
+                  </Button>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Type a size and press Enter or click Add
+                </p>
+                {watch("sizes") && watch("sizes").length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {watch("sizes").map((size, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                      >
+                        {size}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const currentSizes = watch("sizes") || [];
+                            const newSizes = currentSizes.filter(
+                              (_, i) => i !== index
+                            );
+                            setValue("sizes", newSizes);
+                          }}
+                          className="ml-1 text-blue-600 hover:text-blue-800"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Colors */}
+            <div className="space-y-2">
+              <Label>Colors</Label>
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    placeholder="Enter color (e.g., Red)"
+                    value={colorsInput}
+                    onChange={(e) => setColorsInput(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        if (colorsInput.trim()) {
+                          const currentColors = watch("colors") || [];
+                          const newColors = [
+                            ...currentColors,
+                            colorsInput.trim(),
+                          ];
+                          setValue("colors", newColors);
+                          setColorsInput("");
+                        }
+                      }
+                    }}
+                    className="flex-1"
+                    disabled={isSubmitting}
+                  />
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      if (colorsInput.trim()) {
+                        const currentColors = watch("colors") || [];
+                        const newColors = [
+                          ...currentColors,
+                          colorsInput.trim(),
+                        ];
+                        setValue("colors", newColors);
+                        setColorsInput("");
+                      }
+                    }}
+                    disabled={!colorsInput.trim() || isSubmitting}
+                    className="px-4"
+                  >
+                    Add
+                  </Button>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Type a color and press Enter or click Add
+                </p>
+                {watch("colors") && watch("colors").length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {watch("colors").map((color, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                      >
+                        {color}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const currentColors = watch("colors") || [];
+                            const newColors = currentColors.filter(
+                              (_, i) => i !== index
+                            );
+                            setValue("colors", newColors);
+                          }}
+                          className="ml-1 text-green-600 hover:text-green-800"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Product Images */}

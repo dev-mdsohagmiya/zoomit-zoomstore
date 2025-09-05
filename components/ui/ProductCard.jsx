@@ -1,21 +1,50 @@
 "use client";
 import Link from "next/link";
 import { Star } from "lucide-react";
+import { truncateText } from "../../lib/utils";
 
 export default function ProductCard({ product }) {
-  const hasDiscount =
-    product.originalPrice && product.originalPrice > product.price;
-  const discountPercentage = hasDiscount
-    ? Math.round(
-        ((product.originalPrice - product.price) / product.originalPrice) * 100
-      )
-    : 0;
+  // Calculate discount
+  const hasDiscount = product.discount && product.discount > 0;
+  const discountPercentage = product.discount || 0;
 
-  // Convert USD to BDT (approximate rate: 1 USD = 110 BDT)
-  const priceInBDT = Math.round(product.price * 110);
-  const originalPriceInBDT = product.originalPrice
-    ? Math.round(product.originalPrice * 110)
-    : null;
+  // Calculate prices
+  const originalPrice = product.price;
+  const discountedPrice = hasDiscount
+    ? product.price - (product.price * product.discount) / 100
+    : product.price;
+
+  // Get product image
+  const productImage =
+    product.photos && product.photos.length > 0
+      ? product.photos[0]
+      : "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&h=400&fit=crop";
+
+  // Get product name
+  const productName = product.name || "Unnamed Product";
+
+  // Get product description
+  const productDescription = product.description || "No description available";
+
+  // Get category name
+  const categoryName =
+    product.categories && product.categories.length > 0
+      ? product.categories[0].name
+      : "Uncategorized";
+
+  // Generate slug from product name if not available
+  const generateSlug = (title) => {
+    return title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, "") // Remove special characters
+      .replace(/\s+/g, "-") // Replace spaces with hyphens
+      .replace(/-+/g, "-") // Replace multiple hyphens with single
+      .trim();
+  };
+
+  // Get product slug for URL (use generated slug if not available)
+  const productSlug =
+    product.slug || generateSlug(productName) || product._id || product.id;
 
   return (
     <div className="group relative rounded-xl border border-purple-200 bg-white shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
@@ -28,13 +57,13 @@ export default function ProductCard({ product }) {
 
       {/* Product Image */}
       <Link
-        href={`/products/${product.id}`}
+        href={`/products/${productSlug}`}
         className="block overflow-hidden rounded-t-xl"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          alt={product.title}
-          src={product.image}
+          alt={productName}
+          src={productImage}
           className="h-56 w-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
       </Link>
@@ -43,16 +72,18 @@ export default function ProductCard({ product }) {
       <div className="p-4">
         <div className="mb-3">
           <Link
-            href={`/products/${product.id}`}
+            href={`/products/${productSlug}`}
             className="block font-medium text-purple-900 hover:text-purple-700 transition-colors line-clamp-2"
+            title={productName}
           >
-            {product.title}
+            {truncateText(productName, 40)}
           </Link>
-          {product.subtitle && (
-            <p className="mt-1 text-sm text-purple-600 line-clamp-1">
-              {product.subtitle}
-            </p>
-          )}
+          <p
+            className="mt-1 text-sm text-purple-600 line-clamp-2"
+            title={productDescription}
+          >
+            {truncateText(productDescription, 60)}
+          </p>
         </div>
 
         {/* Rating */}
@@ -62,7 +93,7 @@ export default function ProductCard({ product }) {
               <Star
                 key={i}
                 className={`h-4 w-4 ${
-                  i < product.rating
+                  i < Math.floor(product.rating || 0)
                     ? "fill-yellow-400 text-yellow-400"
                     : "text-purple-300"
                 }`}
@@ -70,20 +101,56 @@ export default function ProductCard({ product }) {
             ))}
           </div>
           <span className="text-sm text-purple-600 ml-1">
-            ({product.reviews || 0})
+            ({product.numReviews || 0})
           </span>
         </div>
 
         {/* Pricing */}
         <div className="mb-4 flex items-center gap-2">
           <span className="text-lg font-bold text-purple-900">
-            ৳{priceInBDT.toLocaleString()}
+            ৳{discountedPrice.toFixed(2)}
           </span>
-          {hasDiscount && originalPriceInBDT && (
+          {hasDiscount && (
             <span className="text-sm text-purple-500 line-through">
-              ৳{originalPriceInBDT.toLocaleString()}
+              ৳{originalPrice.toFixed(2)}
             </span>
           )}
+        </div>
+
+        {/* Sizes and Colors */}
+        {(product.sizes?.length > 0 || product.colors?.length > 0) && (
+          <div className="mb-3 flex flex-wrap gap-1">
+            {product.sizes?.slice(0, 2).map((size, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+              >
+                {size}
+              </span>
+            ))}
+            {product.colors?.slice(0, 2).map((color, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
+              >
+                {color}
+              </span>
+            ))}
+            {(product.sizes?.length > 2 || product.colors?.length > 2) && (
+              <span className="text-xs text-gray-500">
+                +
+                {(product.sizes?.length || 0) +
+                  (product.colors?.length || 0) -
+                  2}{" "}
+                more
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Category */}
+        <div className="mb-3 text-xs text-purple-500 font-medium">
+          {categoryName}
         </div>
 
         {/* Add to Cart Button */}

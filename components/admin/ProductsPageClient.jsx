@@ -390,6 +390,13 @@ export default function ProductsPageClient({
     };
   };
 
+  // Helper function to truncate text with ellipsis
+  const truncateText = (text, maxLength = 50) => {
+    if (!text) return "No description";
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + "...";
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -685,6 +692,12 @@ export default function ProductsPageClient({
                     Stock
                   </th>
                   <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Sizes
+                  </th>
+                  <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Colors
+                  </th>
+                  <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Rating
                   </th>
                   <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -722,27 +735,19 @@ export default function ProductsPageClient({
                             )}
                           </div>
                           <div className="ml-4 min-w-0 flex-1">
-                            <div className="text-sm font-medium text-gray-900 break-words">
-                              {product.name}
+                            <div
+                              className="text-sm font-medium text-gray-900 cursor-pointer hover:text-gray-700 transition-colors"
+                              title={product.name}
+                              onClick={() => handleShowDetails(product)}
+                            >
+                              {truncateText(product.name, 30)}
                             </div>
                             <div
                               className="text-sm text-gray-500 cursor-pointer hover:text-gray-700 transition-colors mt-1"
-                              title="Click to view full details"
+                              title={product.description || "No description"}
                               onClick={() => handleShowDetails(product)}
                             >
-                              <div
-                                className="break-words"
-                                style={{
-                                  display: "-webkit-box",
-                                  WebkitLineClamp: 2,
-                                  WebkitBoxOrient: "vertical",
-                                  overflow: "hidden",
-                                  lineHeight: "1.2em",
-                                  maxHeight: "2.4em",
-                                }}
-                              >
-                                {product.description || "No description"}
-                              </div>
+                              {truncateText(product.description, 60)}
                             </div>
                             <div className="text-xs text-gray-400 break-words mt-1">
                               {product.categories
@@ -784,6 +789,58 @@ export default function ProductsPageClient({
                           {product.inStock && product.stock > 0
                             ? "In Stock"
                             : "Out of Stock"}
+                        </div>
+                      </td>
+                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {product.sizes && product.sizes.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {product.sizes.slice(0, 2).map((size, index) => (
+                                <span
+                                  key={index}
+                                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                >
+                                  {size}
+                                </span>
+                              ))}
+                              {product.sizes.length > 2 && (
+                                <span className="text-xs text-gray-500">
+                                  +{product.sizes.length - 2} more
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-gray-500 text-sm">
+                              No sizes
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {product.colors && product.colors.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {product.colors
+                                .slice(0, 2)
+                                .map((color, index) => (
+                                  <span
+                                    key={index}
+                                    className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                                  >
+                                    {color}
+                                  </span>
+                                ))}
+                              {product.colors.length > 2 && (
+                                <span className="text-xs text-gray-500">
+                                  +{product.colors.length - 2} more
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-gray-500 text-sm">
+                              No colors
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
