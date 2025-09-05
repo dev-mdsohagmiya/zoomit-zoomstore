@@ -1,6 +1,18 @@
+"use client";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { isAuthenticated } from "../../lib/auth-utils";
 
 export default function ResetPasswordPage() {
+  const router = useRouter();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated()) {
+      router.push("/");
+    }
+  }, [router]);
   return (
     <div className="min-h-screen flex">
       {/* Left Column - Form */}

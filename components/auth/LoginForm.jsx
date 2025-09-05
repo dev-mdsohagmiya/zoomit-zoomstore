@@ -1,18 +1,25 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { loginSchema } from "../../lib/validations/auth";
 import { loginUser } from "../../app/actions/auth";
-import { storeAuthData } from "../../lib/auth-utils";
+import { storeAuthData, isAuthenticated } from "../../lib/auth-utils";
 import { showSuccessToast, showErrorToast } from "../../lib/toast-utils";
 import FormInput from "../ui/FormInput";
 
 export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated()) {
+      router.push("/");
+    }
+  }, [router]);
 
   const {
     register,

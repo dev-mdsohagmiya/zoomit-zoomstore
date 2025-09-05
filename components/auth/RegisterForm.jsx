@@ -1,12 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { registerSchema } from "../../lib/validations/auth";
 import { registerUser } from "../../app/actions/auth";
-import { storeAuthData } from "../../lib/auth-utils";
+import { storeAuthData, isAuthenticated } from "../../lib/auth-utils";
 import { showSuccessToast, showErrorToast } from "../../lib/toast-utils";
 import FormInput from "../ui/FormInput";
 import FormCheckbox from "../ui/FormCheckbox";
@@ -14,6 +14,13 @@ import FormCheckbox from "../ui/FormCheckbox";
 export default function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated()) {
+      router.push("/");
+    }
+  }, [router]);
 
   const {
     register,
