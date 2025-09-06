@@ -11,9 +11,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { truncateText } from "../../../lib/utils";
-import { addToCart } from "../../../app/actions/cart";
 import { showSuccessToast, showErrorToast } from "../../../lib/toast-utils";
-import { isAuthenticated } from "../../../lib/auth-utils";
 import { useCartState } from "../../../lib/hooks/useCartState";
 
 export default function ProductDetailPageClient({
@@ -32,9 +30,17 @@ export default function ProductDetailPageClient({
 
   // Check if current product is in cart
   const isInCart = isProductInCart(product._id || product.id);
+  console.log(
+    "ProductDetailPageClient - isInCart:",
+    isInCart,
+    "productId:",
+    product._id || product.id
+  );
+  console.log("ProductDetailPageClient - showCartModal:", showCartModal);
 
   // Handle View Cart button click
   const handleViewCart = () => {
+    console.log("handleViewCart called, setting showCartModal to true");
     // Open the cart modal directly - local state is already up to date
     setShowCartModal(true);
   };
@@ -74,13 +80,8 @@ export default function ProductDetailPageClient({
           "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&h=800&fit=crop",
         ];
 
-  // Handle add to cart
+  // Handle add to cart - LOCAL ONLY
   const handleAddToCart = async () => {
-    if (!isAuthenticated()) {
-      showErrorToast("Please login to add items to cart");
-      return;
-    }
-
     // Get the current selected size and color (with defaults)
     const currentSize =
       selectedSize ||
@@ -92,22 +93,54 @@ export default function ProductDetailPageClient({
     setIsAddingToCart(true);
 
     try {
-      const result = await addToCart(
-        product._id || product.id,
-        quantity,
-        currentSize,
-        currentColor
+      // Add to local state immediately for instant UI update
+      addItemLocally(product._id || product.id);
+      showSuccessToast("Item added to cart successfully");
+
+      // Create cart item for localStorage
+      const cartItem = {
+        product: {
+          _id: product._id || product.id,
+          name: product.name,
+          price: product.price,
+          photos: product.photos,
+          slug: product.slug,
+          inStock: product.inStock,
+          discount: product.discount,
+          rating: product.rating,
+          numReviews: product.numReviews,
+        },
+        quantity: quantity,
+        selectedSize: currentSize,
+        selectedColor: currentColor,
+        addedAt: new Date().toISOString(),
+      };
+
+      // Update localStorage
+      const existingCart = JSON.parse(
+        localStorage.getItem("localCart") || "[]"
+      );
+      const existingItemIndex = existingCart.findIndex(
+        (item) =>
+          (item.product._id || item.product.id) ===
+            (product._id || product.id) &&
+          item.selectedSize === currentSize &&
+          item.selectedColor === currentColor
       );
 
-      if (result.success) {
-        showSuccessToast("Item added to cart successfully");
-        // Add to local state immediately for instant UI update
-        addItemLocally(product._id || product.id);
-        // No need to fetch cart data - local state handles UI
+      if (existingItemIndex >= 0) {
+        existingCart[existingItemIndex].quantity += quantity;
+        existingCart[existingItemIndex].addedAt = new Date().toISOString();
       } else {
-        showErrorToast(result.error || "Failed to add item to cart");
+        existingCart.push(cartItem);
       }
+
+      localStorage.setItem("localCart", JSON.stringify(existingCart));
+
+      // Refresh cart state
+      refreshCart();
     } catch (error) {
+      console.error("Error adding to cart:", error);
       showErrorToast("Failed to add item to cart");
     } finally {
       setIsAddingToCart(false);

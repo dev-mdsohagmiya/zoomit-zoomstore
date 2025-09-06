@@ -14,11 +14,28 @@ import { showSuccessToast, showErrorToast } from "../../lib/toast-utils";
 import { truncateText } from "../../lib/utils";
 import { useCartState } from "../../lib/hooks/useCartState";
 
-export default function CenteredCartModal({ trigger }) {
+export default function CenteredCartModal({
+  trigger,
+  isOpen: externalIsOpen,
+  onOpenChange: externalOnOpenChange,
+}) {
   const [cart, setCart] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState({});
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+
+  // Use external control if provided, otherwise use internal state
+  const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
+  const setIsOpen = externalOnOpenChange || setInternalIsOpen;
+
+  console.log(
+    "CenteredCartModal - externalIsOpen:",
+    externalIsOpen,
+    "internalIsOpen:",
+    internalIsOpen,
+    "final isOpen:",
+    isOpen
+  );
   const router = useRouter();
   const {
     refreshCart,
@@ -152,7 +169,7 @@ export default function CenteredCartModal({ trigger }) {
     }
 
     const subtotal = cart.items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
+      (sum, item) => sum + (item.product?.price || 0) * item.quantity,
       0
     );
     const totalItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);
@@ -284,7 +301,10 @@ export default function CenteredCartModal({ trigger }) {
                           </div>
                           <div className="flex items-center justify-between mt-3">
                             <p className="text-xl font-bold text-purple-900">
-                              ৳{item.price * item.quantity}
+                              ৳
+                              {(
+                                (item.product?.price || 0) * item.quantity
+                              ).toFixed(2)}
                             </p>
                             <div className="flex items-center gap-3">
                               <div className="flex items-center gap-2">

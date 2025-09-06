@@ -152,7 +152,7 @@ export default function CartSidePanel({ trigger }) {
     }
 
     const subtotal = cart.items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
+      (sum, item) => sum + (item.product?.price || 0) * item.quantity,
       0
     );
     const totalItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);
@@ -281,7 +281,10 @@ export default function CartSidePanel({ trigger }) {
                           )}
                         </div>
                         <p className="text-lg font-bold text-purple-900 mt-1">
-                          ৳{item.price * item.quantity}
+                          ৳
+                          {((item.product?.price || 0) * item.quantity).toFixed(
+                            2
+                          )}
                         </p>
                       </div>
                       <button
