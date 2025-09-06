@@ -2,7 +2,18 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShoppingCart, Menu, X, User, Settings, LogOut } from "lucide-react";
+import {
+  ShoppingCart,
+  Menu,
+  X,
+  User,
+  Settings,
+  LogOut,
+  Home,
+  Package,
+  UserCircle,
+  Shield,
+} from "lucide-react";
 import CartModal from "./CartModal";
 import {
   isAuthenticated,
@@ -28,10 +39,10 @@ export default function Navbar() {
     }`;
 
   const mobileLinkClass = (href) =>
-    `block px-4 py-3 text-base font-medium transition-colors ${
+    `flex items-center gap-3 px-4 py-3 text-base font-medium transition-colors rounded-lg mx-2 ${
       pathname === href
         ? "bg-purple-900 text-white"
-        : "text-purple-900 hover:bg-purple-100"
+        : "text-gray-700 hover:bg-purple-50"
     }`;
 
   // Handle logout
@@ -160,11 +171,11 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center gap-2">
+          <div className="md:hidden flex items-center gap-3">
             <CartModal
               trigger={
-                <button className="inline-flex items-center gap-1 rounded-md border border-purple-300 px-2 py-1.5 text-xs font-medium text-purple-900 hover:bg-purple-50 transition-colors">
-                  <ShoppingCart className="h-3 w-3" />
+                <button className="inline-flex items-center gap-2 rounded-lg border border-purple-300 px-3 py-2 text-sm font-medium text-purple-900 hover:bg-purple-50 transition-colors">
+                  <ShoppingCart className="h-4 w-4" />
                   <span className="hidden xs:inline">Cart</span>
                 </button>
               }
@@ -172,12 +183,12 @@ export default function Navbar() {
 
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 rounded-md text-purple-900 hover:bg-purple-100 transition-colors"
+              className="p-2 rounded-lg text-purple-900 hover:bg-purple-100 transition-colors"
             >
               {isMobileMenuOpen ? (
-                <X className="h-5 w-5" />
+                <X className="h-6 w-6" />
               ) : (
-                <Menu className="h-5 w-5" />
+                <Menu className="h-6 w-6" />
               )}
             </button>
           </div>
@@ -185,14 +196,15 @@ export default function Navbar() {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-purple-200 bg-white">
-            <div className="px-4 py-2 space-y-1">
+          <div className="md:hidden border-t border-purple-200 bg-white shadow-lg">
+            <div className="px-2 py-4 space-y-2">
               {/* Mobile Navigation Links */}
               <Link
                 href="/"
                 className={mobileLinkClass("/")}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
+                <Home className="h-5 w-5" />
                 Home
               </Link>
               <Link
@@ -200,6 +212,7 @@ export default function Navbar() {
                 className={mobileLinkClass("/products")}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
+                <Package className="h-5 w-5" />
                 Products
               </Link>
 
@@ -209,9 +222,10 @@ export default function Navbar() {
                   <div className="w-8 h-8 rounded-full bg-purple-100 animate-pulse"></div>
                 </div>
               ) : isLoggedIn ? (
-                <div className="px-4 py-3 border-t border-purple-100">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-full overflow-hidden ring-1 ring-purple-200">
+                <div className="px-2 py-3 border-t border-gray-200 mt-4">
+                  {/* User Profile Section */}
+                  <div className="flex items-center gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
+                    <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-purple-200">
                       {user?.photo ? (
                         <img
                           alt="Profile"
@@ -220,59 +234,60 @@ export default function Navbar() {
                         />
                       ) : (
                         <div className="h-full w-full bg-purple-100 flex items-center justify-center">
-                          <span className="text-purple-600 text-sm font-medium">
+                          <span className="text-purple-600 text-lg font-medium">
                             {user?.name?.charAt(0)?.toUpperCase() || "U"}
                           </span>
                         </div>
                       )}
                     </div>
-                    <div>
-                      <div className="text-sm font-medium text-purple-900">
+                    <div className="flex-1">
+                      <div className="text-base font-semibold text-gray-900">
                         {user?.name || "User"}
                       </div>
-                      <div className="text-xs text-purple-600 capitalize">
+                      <div className="text-sm text-gray-600 capitalize">
                         {userRole || "User"}
                       </div>
                     </div>
                   </div>
 
+                  {/* Profile Menu Items */}
                   <div className="space-y-1">
                     <Link
                       href="/profile"
-                      className="flex items-center gap-2 px-3 py-2 text-sm text-purple-700 hover:bg-purple-50 rounded-md transition-colors"
+                      className="flex items-center gap-3 px-4 py-3 text-base text-gray-700 hover:bg-purple-50 rounded-lg transition-colors"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      <User className="h-4 w-4" />
+                      <UserCircle className="h-5 w-5" />
                       Profile
                     </Link>
 
                     {(userRole === "admin" || userRole === "superadmin") && (
                       <Link
                         href="/admin/dashboard"
-                        className="flex items-center gap-2 px-3 py-2 text-sm text-purple-700 hover:bg-purple-50 rounded-md transition-colors"
+                        className="flex items-center gap-3 px-4 py-3 text-base text-gray-700 hover:bg-purple-50 rounded-lg transition-colors"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
-                        <Settings className="h-4 w-4" />
+                        <Shield className="h-5 w-5" />
                         Admin Panel
                       </Link>
                     )}
 
                     <button
                       onClick={handleLogout}
-                      className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors w-full text-left"
+                      className="flex items-center gap-3 px-4 py-3 text-base text-red-600 hover:bg-red-50 rounded-lg transition-colors w-full text-left"
                     >
-                      <LogOut className="h-4 w-4" />
+                      <LogOut className="h-5 w-5" />
                       Sign Out
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="px-4 py-3 border-t border-purple-100 space-y-2">
+                <div className="px-2 py-3 border-t border-gray-200 mt-4 space-y-3">
                   <Link
                     href="/login"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    <button className="w-full h-10 rounded-md border border-purple-300 text-sm font-medium text-purple-900 hover:bg-purple-50 transition-colors">
+                    <button className="w-full h-12 rounded-lg border-2 border-purple-300 text-base font-medium text-purple-900 hover:bg-purple-50 transition-colors">
                       Sign In
                     </button>
                   </Link>
@@ -280,7 +295,7 @@ export default function Navbar() {
                     href="/register"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    <button className="w-full h-10 rounded-md bg-purple-900 text-sm font-medium text-white hover:bg-purple-800 transition-colors">
+                    <button className="w-full h-12 rounded-lg bg-purple-900 text-base font-medium text-white hover:bg-purple-800 transition-colors">
                       Register
                     </button>
                   </Link>
