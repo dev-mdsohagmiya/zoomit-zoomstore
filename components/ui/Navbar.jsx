@@ -77,8 +77,8 @@ export default function Navbar() {
     setUser(null);
     setIsUserMenuOpen(false);
     setIsMobileMenuOpen(false);
-    // Redirect to home page
-    window.location.href = "/";
+    // Redirect to login page
+    window.location.href = "/login";
   };
 
   useEffect(() => {

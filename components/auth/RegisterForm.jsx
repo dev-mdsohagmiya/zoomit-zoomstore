@@ -55,18 +55,14 @@ export default function RegisterForm() {
 
           // Redirect based on user role
           const userRole = result.data.user?.role;
-          setTimeout(() => {
-            if (userRole === "admin" || userRole === "superadmin") {
-              router.push("/admin/dashboard");
-            } else {
-              router.push("/");
-            }
-          }, 2000);
+          if (userRole === "admin" || userRole === "superadmin") {
+            router.push("/admin/dashboard");
+          } else {
+            router.push("/");
+          }
         } else {
           // Fallback: redirect to login page
-          setTimeout(() => {
-            router.push("/login");
-          }, 2000);
+          router.push("/login");
         }
       } else {
         // Handle API errors

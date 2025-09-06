@@ -49,13 +49,11 @@ export default function LoginForm() {
 
         // Redirect to home page or dashboard based on user role
         const userRole = result.data?.user?.role;
-        setTimeout(() => {
-          if (userRole === "admin" || userRole === "superadmin") {
-            router.push("/admin/dashboard");
-          } else {
-            router.push("/");
-          }
-        }, 1500);
+        if (userRole === "admin" || userRole === "superadmin") {
+          router.push("/admin/dashboard");
+        } else {
+          router.push("/");
+        }
       } else {
         showErrorToast(result.error);
       }
