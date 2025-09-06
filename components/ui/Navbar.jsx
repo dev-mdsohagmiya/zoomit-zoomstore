@@ -195,14 +195,15 @@ export default function Navbar() {
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <Link href="/login">
                   <button className="h-9 rounded-md border border-purple-300 px-3 text-sm font-medium text-purple-900 hover:bg-purple-50 transition-colors">
                     Sign In
                   </button>
                 </Link>
-                <Link href="/register">
-                  <button className="h-9 rounded-md bg-purple-900 px-3 text-sm font-medium text-white hover:bg-purple-800 transition-colors">
+                <br />
+                <Link href="/register" className="">
+                  <button className="h-9 rounded-md bg-purple-900 px-3 text-sm font-medium text-white hover:bg-purple-800 transition-colors ">
                     Register
                   </button>
                 </Link>
@@ -327,7 +328,7 @@ export default function Navbar() {
                   </div>
                 </div>
               ) : (
-                <div className="px-2 py-3 border-t border-gray-200 mt-4 space-y-3">
+                <div className="px-2 py-3 flex flex-col  border-t border-gray-200 mt-4 space-y-3">
                   <Link
                     href="/login"
                     onClick={() => setIsMobileMenuOpen(false)}
@@ -337,6 +338,7 @@ export default function Navbar() {
                     </button>
                   </Link>
                   <Link
+                    className=""
                     href="/register"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
