@@ -80,7 +80,8 @@ export default function ProductCard({ product }) {
         showSuccessToast("Item added to cart successfully");
         // Add to local state immediately for instant UI update
         addItemLocally(product._id || product.id);
-        // No need to refresh cart immediately - local state handles UI
+        // Refresh cart to get updated data from server
+        refreshCart();
       } else {
         showErrorToast(result.error || "Failed to add item to cart");
       }

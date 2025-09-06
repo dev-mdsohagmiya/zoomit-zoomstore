@@ -33,7 +33,7 @@ export default function Navbar() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   // Get cart state for item count
-  const { cartItems, refreshCart } = useCartState();
+  const { cartItems, refreshCart, cacheKey } = useCartState();
   const totalItems =
     cartItems?.reduce((total, item) => total + item.quantity, 0) || 0;
 
@@ -42,12 +42,18 @@ export default function Navbar() {
   console.log("Navbar - Total items:", totalItems);
   console.log("Navbar - Loading state:", isLoading);
   console.log("Navbar - Should show badge:", totalItems > 0);
+  console.log("Navbar - Cache key:", cacheKey);
 
   // Refresh cart when component mounts
   useEffect(() => {
     console.log("Navbar - Refreshing cart...");
     refreshCart();
   }, []); // Remove refreshCart from dependencies to avoid infinite loop
+
+  // Force re-render when cart state changes
+  useEffect(() => {
+    console.log("Navbar - Cart state changed, updating badge");
+  }, [cartItems, cacheKey, totalItems]);
 
   const linkClass = (href) =>
     `px-3 py-2 rounded-md text-sm font-medium transition-colors ${
