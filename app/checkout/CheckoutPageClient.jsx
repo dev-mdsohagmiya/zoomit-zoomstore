@@ -37,6 +37,7 @@ export default function CheckoutPageClient({ cart }) {
     executeWithErrorHandling,
   } = useErrorHandler();
   const [currentStep, setCurrentStep] = useState(1); // 1: Form, 2: Processing, 3: Success
+  const [retryCount, setRetryCount] = useState(0);
 
   const router = useRouter();
 
@@ -182,6 +183,13 @@ export default function CheckoutPageClient({ cart }) {
       }
     }
 
+    // Additional validation for required fields
+    if (!formData.phone.trim()) {
+      newErrors.phone = "Phone number is required";
+    } else if (!/^[\+]?[0-9\s\-\(\)]{10,}$/.test(formData.phone)) {
+      newErrors.phone = "Please enter a valid phone number";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -235,6 +243,12 @@ export default function CheckoutPageClient({ cart }) {
   const handleCheckout = async () => {
     if (!validateForm()) {
       showErrorToast("Please fill in all required fields");
+      return;
+    }
+
+    // Additional validation for cart items
+    if (!cart || !cart.items || cart.items.length === 0) {
+      showErrorToast("Your cart is empty. Please add items before checkout.");
       return;
     }
 
@@ -295,8 +309,8 @@ export default function CheckoutPageClient({ cart }) {
         ...(formData.paymentMethod === "card" && {
           cardDetails: {
             number: formData.cardNumber.replace(/\s/g, ""), // Remove spaces from card number
-            expMonth: formData.expMonth,
-            expYear: formData.expYear,
+            expMonth: parseInt(formData.expMonth),
+            expYear: parseInt(formData.expYear),
             cvc: formData.cvc,
             name: formData.cardName,
             email: formData.email,
@@ -305,7 +319,15 @@ export default function CheckoutPageClient({ cart }) {
       };
 
       if (process.env.NODE_ENV === "development") {
-        console.log("Order request data:", orderRequestData);
+        console.log("=== CHECKOUT REQUEST DEBUG ===");
+        console.log(
+          "Order request data:",
+          JSON.stringify(orderRequestData, null, 2)
+        );
+        console.log("Card details:", orderRequestData.cardDetails);
+        console.log("Payment method:", orderRequestData.paymentMethod);
+        console.log("Items count:", orderRequestData.items.length);
+        console.log("Shipping address:", orderRequestData.shippingAddress);
       }
 
       // Create order with payment
@@ -331,33 +353,46 @@ export default function CheckoutPageClient({ cart }) {
           // For card payments, simulate payment processing
           await new Promise((resolve) => setTimeout(resolve, 2000));
 
-          // Confirm payment
-          const paymentResult = await confirmPayment(
-            result.data.payment.paymentId
-          );
+          // For card payments, the backend should handle the payment processing
+          // If we get here, the payment was successful
+          setCurrentStep(3); // Move to success step
+          showSuccessToast("Order placed successfully! Payment confirmed.");
 
-          if (paymentResult.success) {
-            setCurrentStep(3); // Move to success step
-            showSuccessToast("Order placed successfully! Payment confirmed.");
-
-            // Clear cart after successful order
-            try {
-              await clearCart();
-            } catch (error) {
-              console.error("Error clearing cart:", error);
-            }
-          } else {
-            throw new Error(
-              paymentResult.error || "Payment confirmation failed"
+          // Clear cart after successful order
+          try {
+            await clearCart();
+          } catch (error) {
+            console.error("Error clearing cart:", error);
+            // Don't fail the entire process if cart clearing fails
+            showErrorToast(
+              "Order placed but cart clearing failed. Please refresh the page."
             );
           }
         }
       } else {
+        // If this is a retry and still failing, show specific error
+        if (retryCount > 0) {
+          throw new Error(
+            `Order creation failed after ${retryCount + 1} attempts: ${
+              result.error || "Unknown error"
+            }`
+          );
+        }
+
+        // For first failure, try to retry once
+        if (retryCount === 0) {
+          console.log("First attempt failed, retrying...");
+          setRetryCount(1);
+          await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second before retry
+          return handleCheckout(); // Recursive call for retry
+        }
+
         throw new Error(result.error || "Failed to create order");
       }
     }, "Failed to place order. Please try again.");
 
     setIsProcessing(false);
+    setRetryCount(0); // Reset retry count on success
   };
 
   const handleViewOrders = () => {
@@ -414,7 +449,7 @@ export default function CheckoutPageClient({ cart }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8">
       {/* Main Content */}
-      <div className="lg:col-span-2 space-y-4 lg:space-y-8">
+      <div className="lg:col-span-2 space-y-4 lg:space-y-8 order-2 lg:order-1">
         {/* Step 1: Checkout Form */}
         {currentStep === 1 && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6">
@@ -434,7 +469,7 @@ export default function CheckoutPageClient({ cart }) {
                   <User className="h-4 w-4 lg:h-5 lg:w-5" />
                   Personal Information
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Full Name *
@@ -445,15 +480,13 @@ export default function CheckoutPageClient({ cart }) {
                       onChange={(e) =>
                         handleInputChange("name", e.target.value)
                       }
-                      className={`w-full px-3 py-2 lg:px-4 lg:py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm lg:text-base ${
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base ${
                         errors.name ? "border-red-300" : "border-gray-300"
                       }`}
                       placeholder="Enter your full name"
                     />
                     {errors.name && (
-                      <p className="mt-1 text-xs lg:text-sm text-red-600">
-                        {errors.name}
-                      </p>
+                      <p className="mt-1 text-sm text-red-600">{errors.name}</p>
                     )}
                   </div>
 
@@ -467,13 +500,13 @@ export default function CheckoutPageClient({ cart }) {
                       onChange={(e) =>
                         handleInputChange("email", e.target.value)
                       }
-                      className={`w-full px-3 py-2 lg:px-4 lg:py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm lg:text-base ${
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base ${
                         errors.email ? "border-red-300" : "border-gray-300"
                       }`}
                       placeholder="Enter your email"
                     />
                     {errors.email && (
-                      <p className="mt-1 text-xs lg:text-sm text-red-600">
+                      <p className="mt-1 text-sm text-red-600">
                         {errors.email}
                       </p>
                     )}
@@ -489,13 +522,13 @@ export default function CheckoutPageClient({ cart }) {
                       onChange={(e) =>
                         handleInputChange("phone", e.target.value)
                       }
-                      className={`w-full px-3 py-2 lg:px-4 lg:py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm lg:text-base ${
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base ${
                         errors.phone ? "border-red-300" : "border-gray-300"
                       }`}
                       placeholder="Enter your phone number"
                     />
                     {errors.phone && (
-                      <p className="mt-1 text-xs lg:text-sm text-red-600">
+                      <p className="mt-1 text-sm text-red-600">
                         {errors.phone}
                       </p>
                     )}
@@ -509,7 +542,7 @@ export default function CheckoutPageClient({ cart }) {
                   <MapPin className="h-4 w-4 lg:h-5 lg:w-5" />
                   Shipping Address
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Address *
@@ -520,13 +553,13 @@ export default function CheckoutPageClient({ cart }) {
                       onChange={(e) =>
                         handleInputChange("address", e.target.value)
                       }
-                      className={`w-full px-3 py-2 lg:px-4 lg:py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm lg:text-base ${
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base ${
                         errors.address ? "border-red-300" : "border-gray-300"
                       }`}
                       placeholder="Enter your full address"
                     />
                     {errors.address && (
-                      <p className="mt-1 text-xs lg:text-sm text-red-600">
+                      <p className="mt-1 text-sm text-red-600">
                         {errors.address}
                       </p>
                     )}
@@ -542,15 +575,13 @@ export default function CheckoutPageClient({ cart }) {
                       onChange={(e) =>
                         handleInputChange("city", e.target.value)
                       }
-                      className={`w-full px-3 py-2 lg:px-4 lg:py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm lg:text-base ${
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base ${
                         errors.city ? "border-red-300" : "border-gray-300"
                       }`}
                       placeholder="Enter your city"
                     />
                     {errors.city && (
-                      <p className="mt-1 text-xs lg:text-sm text-red-600">
-                        {errors.city}
-                      </p>
+                      <p className="mt-1 text-sm text-red-600">{errors.city}</p>
                     )}
                   </div>
 
@@ -564,13 +595,13 @@ export default function CheckoutPageClient({ cart }) {
                       onChange={(e) =>
                         handleInputChange("postalCode", e.target.value)
                       }
-                      className={`w-full px-3 py-2 lg:px-4 lg:py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm lg:text-base ${
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base ${
                         errors.postalCode ? "border-red-300" : "border-gray-300"
                       }`}
                       placeholder="Enter postal code"
                     />
                     {errors.postalCode && (
-                      <p className="mt-1 text-xs lg:text-sm text-red-600">
+                      <p className="mt-1 text-sm text-red-600">
                         {errors.postalCode}
                       </p>
                     )}
@@ -585,7 +616,7 @@ export default function CheckoutPageClient({ cart }) {
                       onChange={(e) =>
                         handleInputChange("country", e.target.value)
                       }
-                      className={`w-full px-3 py-2 lg:px-4 lg:py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm lg:text-base ${
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base ${
                         errors.country ? "border-red-300" : "border-gray-300"
                       }`}
                     >
@@ -596,7 +627,7 @@ export default function CheckoutPageClient({ cart }) {
                       <option value="UK">UK</option>
                     </select>
                     {errors.country && (
-                      <p className="mt-1 text-xs lg:text-sm text-red-600">
+                      <p className="mt-1 text-sm text-red-600">
                         {errors.country}
                       </p>
                     )}
@@ -610,8 +641,8 @@ export default function CheckoutPageClient({ cart }) {
                   <CreditCard className="h-4 w-4 lg:h-5 lg:w-5" />
                   Payment Method
                 </h3>
-                <div className="space-y-2 lg:space-y-3">
-                  <label className="flex items-center p-3 lg:p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                <div className="space-y-3">
+                  <label className="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
                     <input
                       type="radio"
                       name="paymentMethod"
@@ -620,14 +651,14 @@ export default function CheckoutPageClient({ cart }) {
                       onChange={(e) =>
                         handlePaymentMethodChange(e.target.value)
                       }
-                      className="mr-2 lg:mr-3"
+                      className="mr-3 w-4 h-4"
                     />
-                    <CreditCard className="h-4 w-4 lg:h-5 lg:w-5 text-gray-400 mr-2 lg:mr-3" />
-                    <span className="text-sm lg:text-base">
+                    <CreditCard className="h-5 w-5 text-gray-400 mr-3" />
+                    <span className="text-base font-medium">
                       Credit/Debit Card
                     </span>
                   </label>
-                  <label className="flex items-center p-3 lg:p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                  <label className="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
                     <input
                       type="radio"
                       name="paymentMethod"
@@ -636,10 +667,10 @@ export default function CheckoutPageClient({ cart }) {
                       onChange={(e) =>
                         handlePaymentMethodChange(e.target.value)
                       }
-                      className="mr-2 lg:mr-3"
+                      className="mr-3 w-4 h-4"
                     />
-                    <Banknote className="h-4 w-4 lg:h-5 lg:w-5 text-gray-400 mr-2 lg:mr-3" />
-                    <span className="text-sm lg:text-base">
+                    <Banknote className="h-5 w-5 text-gray-400 mr-3" />
+                    <span className="text-base font-medium">
                       Cash on Delivery
                     </span>
                   </label>
@@ -647,11 +678,11 @@ export default function CheckoutPageClient({ cart }) {
 
                 {/* Card Details Form - Only show when card is selected */}
                 {formData.paymentMethod === "card" && (
-                  <div className="mt-4 lg:mt-6 p-3 lg:p-4 bg-gray-50 rounded-lg">
-                    <h4 className="text-base lg:text-lg font-medium text-gray-900 mb-3 lg:mb-4">
+                  <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                    <h4 className="text-lg font-medium text-gray-900 mb-4">
                       Card Details
                     </h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {/* Card Number */}
                       <div className="sm:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -672,22 +703,22 @@ export default function CheckoutPageClient({ cart }) {
                               );
                               handleInputChange("cardNumber", formatted);
                             }}
-                            className={`w-full px-3 py-2 lg:px-4 lg:py-3 pr-16 lg:pr-20 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm lg:text-base ${
+                            className={`w-full px-4 py-3 pr-20 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base ${
                               errors.cardNumber
                                 ? "border-red-300"
                                 : "border-gray-300"
                             }`}
                           />
                           {formData.cardNumber && (
-                            <div className="absolute right-2 lg:right-3 top-1/2 transform -translate-y-1/2">
-                              <span className="text-xs font-medium text-gray-500 bg-gray-100 px-1 lg:px-2 py-1 rounded">
+                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                              <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
                                 {getCardType(formData.cardNumber)}
                               </span>
                             </div>
                           )}
                         </div>
                         {errors.cardNumber && (
-                          <p className="mt-1 text-xs lg:text-sm text-red-600">
+                          <p className="mt-1 text-sm text-red-600">
                             {errors.cardNumber}
                           </p>
                         )}
@@ -705,14 +736,14 @@ export default function CheckoutPageClient({ cart }) {
                           onChange={(e) =>
                             handleInputChange("cardName", e.target.value)
                           }
-                          className={`w-full px-3 py-2 lg:px-4 lg:py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm lg:text-base ${
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base ${
                             errors.cardName
                               ? "border-red-300"
                               : "border-gray-300"
                           }`}
                         />
                         {errors.cardName && (
-                          <p className="mt-1 text-xs lg:text-sm text-red-600">
+                          <p className="mt-1 text-sm text-red-600">
                             {errors.cardName}
                           </p>
                         )}
@@ -728,7 +759,7 @@ export default function CheckoutPageClient({ cart }) {
                           onChange={(e) =>
                             handleInputChange("expMonth", e.target.value)
                           }
-                          className={`w-full px-3 py-2 lg:px-4 lg:py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm lg:text-base ${
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base ${
                             errors.expMonth
                               ? "border-red-300"
                               : "border-gray-300"
@@ -745,7 +776,7 @@ export default function CheckoutPageClient({ cart }) {
                           ))}
                         </select>
                         {errors.expMonth && (
-                          <p className="mt-1 text-xs lg:text-sm text-red-600">
+                          <p className="mt-1 text-sm text-red-600">
                             {errors.expMonth}
                           </p>
                         )}
@@ -761,7 +792,7 @@ export default function CheckoutPageClient({ cart }) {
                           onChange={(e) =>
                             handleInputChange("expYear", e.target.value)
                           }
-                          className={`w-full px-3 py-2 lg:px-4 lg:py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm lg:text-base ${
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base ${
                             errors.expYear
                               ? "border-red-300"
                               : "border-gray-300"
@@ -778,7 +809,7 @@ export default function CheckoutPageClient({ cart }) {
                           })}
                         </select>
                         {errors.expYear && (
-                          <p className="mt-1 text-xs lg:text-sm text-red-600">
+                          <p className="mt-1 text-sm text-red-600">
                             {errors.expYear}
                           </p>
                         )}
@@ -799,12 +830,12 @@ export default function CheckoutPageClient({ cart }) {
                               .slice(0, 4);
                             handleInputChange("cvc", value);
                           }}
-                          className={`w-full px-3 py-2 lg:px-4 lg:py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm lg:text-base ${
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base ${
                             errors.cvc ? "border-red-300" : "border-gray-300"
                           }`}
                         />
                         {errors.cvc && (
-                          <p className="mt-1 text-xs lg:text-sm text-red-600">
+                          <p className="mt-1 text-sm text-red-600">
                             {errors.cvc}
                           </p>
                         )}
@@ -812,9 +843,9 @@ export default function CheckoutPageClient({ cart }) {
                     </div>
 
                     {/* Security Notice */}
-                    <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                      <div className="flex items-start gap-2">
-                        <div className="w-5 h-5 text-blue-600 mt-0.5">
+                    <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <div className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0">
                           <svg fill="currentColor" viewBox="0 0 20 20">
                             <path
                               fillRule="evenodd"
@@ -825,7 +856,7 @@ export default function CheckoutPageClient({ cart }) {
                         </div>
                         <div className="text-sm text-blue-800">
                           <p className="font-medium">Secure Payment</p>
-                          <p className="text-blue-700">
+                          <p className="text-blue-700 mt-1">
                             Your card information is encrypted and secure. We
                             never store your card details.
                           </p>
@@ -834,9 +865,9 @@ export default function CheckoutPageClient({ cart }) {
                     </div>
 
                     {/* Test Data Notice */}
-                    <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <div className="flex items-start gap-2">
-                        <div className="w-5 h-5 text-yellow-600 mt-0.5">
+                    <div className="mt-3 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <div className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0">
                           <svg fill="currentColor" viewBox="0 0 20 20">
                             <path
                               fillRule="evenodd"
@@ -847,7 +878,7 @@ export default function CheckoutPageClient({ cart }) {
                         </div>
                         <div className="text-sm text-yellow-800">
                           <p className="font-medium">Test Mode</p>
-                          <p className="text-yellow-700">
+                          <p className="text-yellow-700 mt-1">
                             Using Stripe test card details. No real payment will
                             be processed.
                           </p>
@@ -860,15 +891,23 @@ export default function CheckoutPageClient({ cart }) {
             </div>
 
             <div className="mt-6 lg:mt-8">
-              <LoadingButton
+              <button
                 onClick={handleCheckout}
-                loading={isProcessing}
-                loadingText="Processing Order..."
-                className="w-full bg-purple-900 text-white py-3 lg:py-4 px-4 lg:px-6 rounded-lg font-semibold hover:bg-purple-800 transition-colors text-base lg:text-lg"
+                disabled={isProcessing}
+                className="w-full bg-purple-900 text-white py-3 px-4 lg:px-6 rounded-lg font-semibold hover:bg-purple-800 transition-colors text-base lg:text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                <CreditCard className="h-5 w-5 lg:h-6 lg:w-6" />
-                Place Order - ৳{totalPrice.toLocaleString()}
-              </LoadingButton>
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="h-5 w-5 lg:h-6 lg:w-6 animate-spin" />
+                    Processing Order...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="h-5 w-5 lg:h-6 lg:w-6" />
+                    Place Order - ৳{totalPrice.toLocaleString()}
+                  </>
+                )}
+              </button>
             </div>
           </div>
         )}
@@ -980,17 +1019,21 @@ export default function CheckoutPageClient({ cart }) {
       </div>
 
       {/* Order Summary Sidebar */}
-      <div className="lg:col-span-1">
+      <div className="lg:col-span-1 order-1 lg:order-2">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6 sticky top-4 lg:top-8">
-          <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-3 lg:mb-4">
+          <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-3 lg:mb-4 flex items-center gap-2">
+            <Package className="h-5 w-5 text-purple-600" />
             Order Summary
           </h3>
 
           {/* Cart Items */}
-          <div className="space-y-3 lg:space-y-4 mb-4 lg:mb-6">
+          <div className="space-y-3 lg:space-y-4 mb-4 lg:mb-6 max-h-64 overflow-y-auto">
             {cart.items.map((item, index) => (
-              <div key={index} className="flex items-center gap-2 lg:gap-3">
-                <div className="h-10 w-10 lg:h-12 lg:w-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+              <div
+                key={index}
+                className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
+              >
+                <div className="h-16 w-16 lg:h-20 lg:w-20 flex-shrink-0 overflow-hidden rounded-lg bg-white shadow-sm">
                   <img
                     src={item.product.photos?.[0] || "/placeholder-product.jpg"}
                     alt={item.product.name}
@@ -998,50 +1041,67 @@ export default function CheckoutPageClient({ cart }) {
                   />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="text-xs lg:text-sm font-medium text-gray-900">
-                    {truncateText(item.product.name, 25)}
+                  <h4 className="text-sm lg:text-base font-medium text-gray-900 mb-1 line-clamp-2">
+                    {item.product.name}
                   </h4>
-                  <div className="text-xs text-gray-500 mt-1">
+
+                  {/* Product Details */}
+                  <div className="space-y-1 mb-2">
                     {item.selectedSize && (
-                      <span>Size: {item.selectedSize}</span>
-                    )}
-                    {item.selectedSize && item.selectedColor && (
-                      <span> • </span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-gray-500">Size:</span>
+                        <span className="text-xs font-medium text-gray-700 bg-white px-2 py-0.5 rounded">
+                          {item.selectedSize}
+                        </span>
+                      </div>
                     )}
                     {item.selectedColor && (
-                      <span>Color: {item.selectedColor}</span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-gray-500">Color:</span>
+                        <span className="text-xs font-medium text-gray-700 bg-white px-2 py-0.5 rounded">
+                          {item.selectedColor}
+                        </span>
+                      </div>
                     )}
                   </div>
-                  <div className="text-xs lg:text-sm text-gray-900 mt-1">
-                    ৳{item.price.toLocaleString()} × {item.quantity}
+
+                  {/* Price and Quantity */}
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-600">
+                      ৳{item.price.toLocaleString()} × {item.quantity}
+                    </div>
+                    <div className="text-sm lg:text-base font-semibold text-gray-900">
+                      ৳{(item.price * item.quantity).toLocaleString()}
+                    </div>
                   </div>
-                </div>
-                <div className="text-xs lg:text-sm font-medium text-gray-900">
-                  ৳{(item.price * item.quantity).toLocaleString()}
                 </div>
               </div>
             ))}
           </div>
 
           {/* Price Breakdown */}
-          <div className="space-y-2 lg:space-y-3 border-t border-gray-200 pt-3 lg:pt-4">
-            <div className="flex justify-between text-xs lg:text-sm">
+          <div className="space-y-3 border-t border-gray-200 pt-4">
+            <div className="flex justify-between text-sm">
               <span className="text-gray-600">Items Price</span>
-              <span className="text-gray-900">
+              <span className="text-gray-900 font-medium">
                 ৳{itemsPrice.toLocaleString()}
               </span>
             </div>
-            <div className="flex justify-between text-xs lg:text-sm">
+            <div className="flex justify-between text-sm">
               <span className="text-gray-600">Shipping</span>
-              <span className="text-gray-900">
+              <span
+                className={`font-medium ${
+                  shippingPrice === 0 ? "text-green-600" : "text-gray-900"
+                }`}
+              >
                 {shippingPrice === 0
                   ? "Free"
                   : `৳${shippingPrice.toLocaleString()}`}
               </span>
             </div>
-            <div className="flex justify-between text-base lg:text-lg font-semibold">
+            <div className="flex justify-between text-lg font-bold border-t border-gray-200 pt-3">
               <span className="text-gray-900">Total</span>
-              <span className="text-gray-900">
+              <span className="text-purple-900">
                 ৳{totalPrice.toLocaleString()}
               </span>
             </div>

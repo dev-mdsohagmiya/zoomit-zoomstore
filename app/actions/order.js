@@ -61,7 +61,7 @@ export async function createOrderWithPayment(orderData) {
     const requestBody = {
       items: orderData.items,
       shippingAddress: orderData.shippingAddress,
-      paymentType: orderData.paymentMethod || "card",
+      paymentMethod: orderData.paymentMethod || "card",
     };
 
     // Add card details if payment method is card
@@ -79,7 +79,7 @@ export async function createOrderWithPayment(orderData) {
       };
     } else if (orderData.paymentMethod === "cash") {
       // For cash on delivery, no additional details needed
-      requestBody.paymentType = "cash";
+      requestBody.paymentMethod = "cash";
     }
 
     if (process.env.NODE_ENV === "development") {
@@ -97,10 +97,23 @@ export async function createOrderWithPayment(orderData) {
 
     const result = await response.json();
 
+    if (process.env.NODE_ENV === "development") {
+      console.log("API Response status:", response.status);
+      console.log("API Response data:", result);
+    }
+
     if (!response.ok) {
+      console.error("Order creation failed:", {
+        status: response.status,
+        statusText: response.statusText,
+        error: result,
+      });
       return {
         success: false,
-        error: result.message || "Failed to create order with payment",
+        error:
+          result.message ||
+          result.error ||
+          "Failed to create order with payment",
       };
     }
 
@@ -119,9 +132,26 @@ export async function createOrderWithPayment(orderData) {
     };
   } catch (error) {
     console.error("Error creating order with payment:", error);
+
+    // Handle specific error types
+    if (error.name === "TypeError" && error.message.includes("fetch")) {
+      return {
+        success: false,
+        error:
+          "Unable to connect to server. Please check your internet connection and try again.",
+      };
+    }
+
+    if (error.message.includes("JSON")) {
+      return {
+        success: false,
+        error: "Invalid response from server. Please try again.",
+      };
+    }
+
     return {
       success: false,
-      error: "Failed to create order with payment",
+      error: error.message || "Failed to create order with payment",
     };
   }
 }
