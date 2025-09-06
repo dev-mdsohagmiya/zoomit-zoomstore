@@ -14,7 +14,7 @@ import {
   UserCircle,
   Shield,
 } from "lucide-react";
-import CartModal from "./CartModal";
+import CartSidePanel from "./CartSidePanel";
 import { useCartState } from "../../lib/hooks/useCartState";
 import {
   isAuthenticated,
@@ -145,7 +145,7 @@ export default function Navbar() {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
-            <CartModal
+            <CartSidePanel
               trigger={
                 <button className="relative inline-flex items-center gap-2 rounded-md border border-purple-300 px-3 py-2 text-sm font-medium text-purple-900 hover:bg-purple-50 transition-colors">
                   <ShoppingCart className="h-4 w-4" />
@@ -212,7 +212,7 @@ export default function Navbar() {
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center gap-3">
-            <CartModal
+            <CartSidePanel
               trigger={
                 <button className="relative inline-flex items-center gap-2 rounded-lg border border-purple-300 px-3 py-2 text-sm font-medium text-purple-900 hover:bg-purple-50 transition-colors">
                   <ShoppingCart className="h-4 w-4" />

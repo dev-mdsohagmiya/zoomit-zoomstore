@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { loginSchema } from "../../lib/validations/auth";
 import { loginUser } from "../../app/actions/auth";
@@ -13,13 +13,16 @@ import FormInput from "../ui/FormInput";
 export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams.get("returnUrl");
 
   // Redirect if already logged in
   useEffect(() => {
     if (isAuthenticated()) {
-      router.push("/");
+      const redirectUrl = returnUrl ? decodeURIComponent(returnUrl) : "/";
+      router.push(redirectUrl);
     }
-  }, [router]);
+  }, [router, returnUrl]);
 
   const {
     register,
@@ -47,12 +50,13 @@ export default function LoginForm() {
           storeAuthData(result.data.accessToken, result.data.user);
         }
 
-        // Redirect to home page or dashboard based on user role
+        // Redirect to home page, dashboard, or return URL based on user role
         const userRole = result.data?.user?.role;
         if (userRole === "admin" || userRole === "superadmin") {
           router.push("/admin/dashboard");
         } else {
-          router.push("/");
+          const redirectUrl = returnUrl ? decodeURIComponent(returnUrl) : "/";
+          router.push(redirectUrl);
         }
       } else {
         showErrorToast(result.error);

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Star, ShoppingCart, Plus, Loader2 } from "lucide-react";
 import { truncateText } from "../../lib/utils";
@@ -11,7 +11,7 @@ import CenteredCartModal from "./CenteredCartModal";
 
 export default function ProductCard({ product }) {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
-  const [showCartModal, setShowCartModal] = useState(false);
+  const cartModalRef = useRef(null);
   const { isProductInCart, refreshCart, addItemLocally, cartItems, cacheKey } =
     useCartState();
 
@@ -25,8 +25,10 @@ export default function ProductCard({ product }) {
 
   // Handle View Cart button click
   const handleViewCart = () => {
-    // Open the cart modal directly - local state is already up to date
-    setShowCartModal(true);
+    // Trigger the cart modal
+    if (cartModalRef.current) {
+      cartModalRef.current.click();
+    }
   };
 
   // Calculate prices first
@@ -42,15 +44,10 @@ export default function ProductCard({ product }) {
   // Check if there's a discount
   const hasDiscount = discountPercentage > 0;
 
-  // Handle add to cart
+  // Handle add to cart - PURELY LOCAL
   const handleAddToCart = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-
-    if (!isAuthenticated()) {
-      showErrorToast("Please login to add items to cart");
-      return;
-    }
 
     setIsAddingToCart(true);
 
@@ -69,23 +66,63 @@ export default function ProductCard({ product }) {
         selectedColor = product.colors[0];
       }
 
-      const result = await addToCart(
-        product._id || product.id,
-        1,
-        selectedSize,
-        selectedColor
+      // Add to local state immediately for instant UI update
+      addItemLocally(product._id || product.id);
+      showSuccessToast("Item added to cart successfully");
+
+      // Store cart item with full product data in localStorage
+      const cartItem = {
+        product: {
+          _id: product._id || product.id,
+          id: product._id || product.id,
+          name: product.name,
+          price: product.price,
+          photos: product.photos,
+          sizes: product.sizes,
+          colors: product.colors,
+          slug: product.slug,
+          description: product.description,
+          category: product.category,
+          brand: product.brand,
+          inStock: product.inStock,
+          discountPercentage: product.discountPercentage,
+        },
+        quantity: 1,
+        price: product.price,
+        selectedSize: selectedSize,
+        selectedColor: selectedColor,
+        isLocalItem: true,
+        addedAt: new Date().toISOString(),
+      };
+
+      // Get existing cart from localStorage
+      const existingCart = JSON.parse(
+        localStorage.getItem("localCart") || "[]"
+      );
+      const existingItemIndex = existingCart.findIndex(
+        (item) =>
+          (item.product._id || item.product.id) ===
+            (product._id || product.id) &&
+          item.selectedSize === selectedSize &&
+          item.selectedColor === selectedColor
       );
 
-      if (result.success) {
-        showSuccessToast("Item added to cart successfully");
-        // Add to local state immediately for instant UI update
-        addItemLocally(product._id || product.id);
-        // Refresh cart to get updated data from server
-        refreshCart();
+      if (existingItemIndex >= 0) {
+        // Update existing item quantity
+        existingCart[existingItemIndex].quantity += 1;
+        existingCart[existingItemIndex].addedAt = new Date().toISOString();
       } else {
-        showErrorToast(result.error || "Failed to add item to cart");
+        // Add new item
+        existingCart.push(cartItem);
       }
+
+      // Save to localStorage
+      localStorage.setItem("localCart", JSON.stringify(existingCart));
+
+      // Trigger cart refresh to update UI
+      refreshCart();
     } catch (error) {
+      console.error("Error adding to cart:", error);
       showErrorToast("Failed to add item to cart");
     } finally {
       setIsAddingToCart(false);
@@ -267,9 +304,11 @@ export default function ProductCard({ product }) {
 
         {/* Cart Modal */}
         <CenteredCartModal
-          trigger={<div style={{ display: "none" }} />}
-          isOpen={showCartModal}
-          onOpenChange={setShowCartModal}
+          trigger={
+            <button ref={cartModalRef} style={{ display: "none" }}>
+              Hidden Trigger
+            </button>
+          }
         />
       </div>
     </div>

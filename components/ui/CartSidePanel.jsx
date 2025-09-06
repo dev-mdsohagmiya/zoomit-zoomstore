@@ -14,7 +14,7 @@ import { showSuccessToast, showErrorToast } from "../../lib/toast-utils";
 import { truncateText } from "../../lib/utils";
 import { useCartState } from "../../lib/hooks/useCartState";
 
-export default function CenteredCartModal({ trigger }) {
+export default function CartSidePanel({ trigger }) {
   const [cart, setCart] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState({});
@@ -188,15 +188,15 @@ export default function CenteredCartModal({ trigger }) {
       <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl max-h-[90vh] bg-white rounded-2xl shadow-2xl focus:outline-none z-50 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 flex flex-col">
+        <Dialog.Content className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl border-l border-purple-200 focus:outline-none z-50 data-[state=open]:animate-in data-[state=open]:slide-in-from-right data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right flex flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-purple-200 p-6 bg-gradient-to-r from-purple-50 to-white rounded-t-2xl">
+          <div className="flex items-center justify-between border-b border-purple-200 p-6 bg-gradient-to-r from-purple-50 to-white">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-purple-900 flex items-center justify-center shadow-lg">
                 <ShoppingCart className="w-5 h-5 text-white" />
               </div>
               <div>
-                <Dialog.Title className="text-xl font-bold text-purple-900">
+                <Dialog.Title className="text-lg font-bold text-purple-900">
                   Shopping Cart
                 </Dialog.Title>
                 <p className="text-sm text-purple-600">
@@ -211,7 +211,7 @@ export default function CenteredCartModal({ trigger }) {
                 <button
                   onClick={handleClearCart}
                   disabled={isLoading}
-                  className="text-xs text-red-600 hover:text-red-800 hover:bg-red-50 px-3 py-1 rounded-md transition-colors disabled:opacity-50"
+                  className="text-xs text-red-600 hover:text-red-800 hover:bg-red-50 px-2 py-1 rounded-md transition-colors disabled:opacity-50"
                 >
                   Clear All
                 </button>
@@ -231,8 +231,8 @@ export default function CenteredCartModal({ trigger }) {
               </div>
             ) : !cart?.items || cart.items.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <ShoppingCart className="h-20 w-20 text-purple-300 mb-4" />
-                <h3 className="text-xl font-medium text-purple-900 mb-2">
+                <ShoppingCart className="h-16 w-16 text-purple-300 mb-4" />
+                <h3 className="text-lg font-medium text-purple-900 mb-2">
                   Your cart is empty
                 </h3>
                 <p className="text-purple-600 mb-6">
@@ -245,155 +245,139 @@ export default function CenteredCartModal({ trigger }) {
                 </Dialog.Close>
               </div>
             ) : (
-              <div className="grid gap-4">
-                {cart.items.map((item, index) => (
-                  <div
-                    key={`${index}-${item.product._id}`}
-                    className="flex gap-4 rounded-xl border border-purple-200 p-4 bg-white shadow-sm hover:shadow-md transition-shadow"
-                  >
-                    <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-purple-50">
-                      <img
-                        alt={item.product.name}
-                        src={
-                          item.product.photos?.[0] || "/placeholder-product.jpg"
-                        }
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <p
-                            className="font-semibold text-purple-900 cursor-pointer hover:text-purple-700 transition-colors text-lg"
-                            title={item.product.name}
-                            onClick={() => handleProductClick(item.product)}
-                          >
-                            {truncateText(item.product.name, 40)}
-                          </p>
-                          <div className="flex items-center gap-2 text-sm text-purple-600 mt-1">
-                            {item.selectedSize && (
-                              <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-md">
-                                Size: {item.selectedSize}
-                              </span>
-                            )}
-                            {item.selectedColor && (
-                              <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-md">
-                                Color: {item.selectedColor}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center justify-between mt-3">
-                            <p className="text-xl font-bold text-purple-900">
-                              ৳{item.price * item.quantity}
-                            </p>
-                            <div className="flex items-center gap-3">
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={() =>
-                                    handleQuantityUpdate(
-                                      `${index}-${item.product._id}`,
-                                      item.product._id,
-                                      item.quantity - 1,
-                                      item.selectedSize,
-                                      item.selectedColor
-                                    )
-                                  }
-                                  disabled={
-                                    item.quantity <= 1 ||
-                                    isUpdating[`${index}-${item.product._id}`]
-                                  }
-                                  className="w-8 h-8 rounded-full border border-purple-300 flex items-center justify-center text-purple-600 hover:bg-purple-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                >
-                                  <Minus className="w-4 h-4" />
-                                </button>
-                                <span className="w-8 text-center font-medium text-purple-900">
-                                  {isUpdating[
-                                    `${index}-${item.product._id}`
-                                  ] ? (
-                                    <Loader2 className="w-4 h-4 animate-spin mx-auto" />
-                                  ) : (
-                                    item.quantity
-                                  )}
-                                </span>
-                                <button
-                                  onClick={() =>
-                                    handleQuantityUpdate(
-                                      `${index}-${item.product._id}`,
-                                      item.product._id,
-                                      item.quantity + 1,
-                                      item.selectedSize,
-                                      item.selectedColor
-                                    )
-                                  }
-                                  disabled={
-                                    isUpdating[`${index}-${item.product._id}`]
-                                  }
-                                  className="w-8 h-8 rounded-full border border-purple-300 flex items-center justify-center text-purple-600 hover:bg-purple-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                >
-                                  <Plus className="w-4 h-4" />
-                                </button>
-                              </div>
-                              <button
-                                onClick={() =>
-                                  handleRemoveItem(
-                                    `${index}-${item.product._id}`
-                                  )
-                                }
-                                disabled={
-                                  isUpdating[`${index}-${item.product._id}`]
-                                }
-                                className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-md transition-colors disabled:opacity-50"
-                              >
-                                <Trash2 className="w-5 h-5" />
-                              </button>
-                            </div>
-                          </div>
+              cart.items.map((item, index) => (
+                <div
+                  key={`${index}-${item.product._id}`}
+                  className="flex gap-4 rounded-xl border border-purple-200 p-4 bg-white shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-purple-50">
+                    <img
+                      alt={item.product.name}
+                      src={
+                        item.product.photos?.[0] || "/placeholder-product.jpg"
+                      }
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p
+                          className="font-semibold text-purple-900 cursor-pointer hover:text-purple-700 transition-colors"
+                          title={item.product.name}
+                          onClick={() => handleProductClick(item.product)}
+                        >
+                          {truncateText(item.product.name, 30)}
+                        </p>
+                        <div className="flex items-center gap-2 text-sm text-purple-600">
+                          {item.selectedSize && (
+                            <span>Size {item.selectedSize}</span>
+                          )}
+                          {item.selectedSize && item.selectedColor && (
+                            <span>•</span>
+                          )}
+                          {item.selectedColor && (
+                            <span>Color {item.selectedColor}</span>
+                          )}
                         </div>
+                        <p className="text-lg font-bold text-purple-900 mt-1">
+                          ৳{item.price * item.quantity}
+                        </p>
                       </div>
+                      <button
+                        onClick={() =>
+                          handleRemoveItem(`${index}-${item.product._id}`)
+                        }
+                        disabled={isUpdating[`${index}-${item.product._id}`]}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded-md transition-colors disabled:opacity-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-2 mt-3">
+                      <button
+                        onClick={() =>
+                          handleQuantityUpdate(
+                            `${index}-${item.product._id}`,
+                            item.product._id,
+                            item.quantity - 1,
+                            item.selectedSize,
+                            item.selectedColor
+                          )
+                        }
+                        disabled={
+                          item.quantity <= 1 ||
+                          isUpdating[`${index}-${item.product._id}`]
+                        }
+                        className="w-8 h-8 rounded-full border border-purple-300 flex items-center justify-center text-purple-600 hover:bg-purple-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <Minus className="w-4 h-4" />
+                      </button>
+                      <span className="w-8 text-center font-medium text-purple-900">
+                        {isUpdating[`${index}-${item.product._id}`] ? (
+                          <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                        ) : (
+                          item.quantity
+                        )}
+                      </span>
+                      <button
+                        onClick={() =>
+                          handleQuantityUpdate(
+                            `${index}-${item.product._id}`,
+                            item.product._id,
+                            item.quantity + 1,
+                            item.selectedSize,
+                            item.selectedColor
+                          )
+                        }
+                        disabled={isUpdating[`${index}-${item.product._id}`]}
+                        className="w-8 h-8 rounded-full border border-purple-300 flex items-center justify-center text-purple-600 hover:bg-purple-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))
             )}
           </div>
 
           {/* Footer */}
           {cart?.items && cart.items.length > 0 && (
-            <div className="border-t border-purple-200 p-6 bg-gradient-to-r from-purple-50 to-white rounded-b-2xl">
+            <div className="border-t border-purple-200 p-6 bg-gradient-to-r from-purple-50 to-white">
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-purple-600">Subtotal</span>
-                    <span className="font-medium text-purple-900">
-                      ৳{totals.subtotal}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-purple-600">Shipping</span>
-                    <span className="font-medium text-purple-900">
-                      {totals.shipping === 0 ? "Free" : `৳${totals.shipping}`}
-                    </span>
-                  </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-purple-600">Subtotal</span>
+                  <span className="font-medium text-purple-900">
+                    ৳{totals.subtotal}
+                  </span>
                 </div>
-                <div className="border-t border-purple-200 pt-4">
-                  <div className="flex justify-between text-xl font-bold">
+                <div className="flex justify-between text-sm">
+                  <span className="text-purple-600">Shipping</span>
+                  <span className="font-medium text-purple-900">
+                    {totals.shipping === 0 ? "Free" : `৳${totals.shipping}`}
+                  </span>
+                </div>
+                <div className="border-t border-purple-200 pt-2">
+                  <div className="flex justify-between text-lg font-bold">
                     <span className="text-purple-900">Total</span>
                     <span className="text-purple-900">৳{totals.total}</span>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <Dialog.Close asChild>
-                    <button className="text-purple-600 py-3 px-4 rounded-lg font-medium hover:bg-purple-50 transition-colors border border-purple-200">
-                      Continue Shopping
-                    </button>
-                  </Dialog.Close>
+                <div className="space-y-2">
                   <Link
                     href="/checkout"
-                    className="bg-purple-900 text-white py-3 px-4 rounded-lg font-medium hover:bg-purple-800 transition-colors text-center block"
+                    className="w-full bg-purple-900 text-white py-3 px-4 rounded-lg font-medium hover:bg-purple-800 transition-colors text-center block"
                     onClick={() => setIsOpen(false)}
                   >
                     Proceed to Checkout
                   </Link>
+                  <Dialog.Close asChild>
+                    <button className="w-full text-purple-600 py-2 px-4 rounded-lg font-medium hover:bg-purple-50 transition-colors">
+                      Continue Shopping
+                    </button>
+                  </Dialog.Close>
                 </div>
               </div>
             </div>
