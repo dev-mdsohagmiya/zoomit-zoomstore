@@ -256,23 +256,6 @@ export default function HeroSection({ heroProduct }) {
                               ? heroProduct.price.toLocaleString()
                               : "N/A"}
                           </div>
-                          {(() => {
-                            console.log("🔍 Discount debug:", {
-                              discount: heroProduct.discount,
-                              discountType: typeof heroProduct.discount,
-                              hasDiscount: !!heroProduct.discount,
-                              isDiscountGreaterThanZero:
-                                heroProduct.discount > 0,
-                              price: heroProduct.price,
-                              shouldShowDiscount:
-                                heroProduct.discount !== undefined &&
-                                heroProduct.discount !== null &&
-                                heroProduct.discount > 0 &&
-                                heroProduct.price &&
-                                heroProduct.price > 0,
-                            });
-                            return null;
-                          })()}
                           {heroProduct.discount !== undefined &&
                             heroProduct.discount !== null &&
                             heroProduct.discount > 0 &&

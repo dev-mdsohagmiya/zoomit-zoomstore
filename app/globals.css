@@ -124,6 +124,16 @@
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
+  /* Prevent scroll restoration */
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  /* Ensure pages start at top */
+  body {
+    scroll-behavior: auto !important;
+  }
+
   /* Typography hierarchy */
   h1,
   h2,

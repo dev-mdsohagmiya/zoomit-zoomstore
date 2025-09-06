@@ -46,17 +46,6 @@ export default async function HomePage() {
         const randomIndex = Math.floor(Math.random() * featuredProducts.length);
         heroProduct = featuredProducts[randomIndex];
       }
-
-      // Debug logging
-      console.log("🎯 Selected hero product:", {
-        name: heroProduct?.name,
-        price: heroProduct?.price,
-        discount: heroProduct?.discount,
-        id: heroProduct?._id,
-        hasPrice: !!heroProduct?.price,
-        priceType: typeof heroProduct?.price,
-        discountType: typeof heroProduct?.discount,
-      });
     }
   } catch (error) {
     console.error("Error fetching home page data:", error);

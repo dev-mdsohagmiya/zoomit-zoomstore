@@ -15,6 +15,8 @@ const nextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
   },
+  // Disable scroll restoration
+  scrollRestoration: false,
 };
 
 export default nextConfig;
