@@ -14,6 +14,7 @@ import { truncateText } from "../../../lib/utils";
 import { addToCart, getCart } from "../../../app/actions/cart";
 import { showSuccessToast, showErrorToast } from "../../../lib/toast-utils";
 import { isAuthenticated } from "../../../lib/auth-utils";
+import { useCartState } from "../../../lib/hooks/useCartState";
 
 export default function ProductDetailPageClient({
   product,
@@ -28,7 +29,18 @@ export default function ProductDetailPageClient({
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [cartItemCount, setCartItemCount] = useState(0);
   const [showCartModal, setShowCartModal] = useState(false);
-  const [isInCart, setIsInCart] = useState(false);
+  const { isProductInCart, addItemLocally, refreshCart } = useCartState();
+
+  // Check if current product is in cart
+  const isInCart = isProductInCart(product._id || product.id);
+
+  // Handle View Cart button click
+  const handleViewCart = () => {
+    // Refresh cart data to ensure we have the latest information
+    refreshCart();
+    // Open the cart modal
+    setShowCartModal(true);
+  };
 
   // Set default size and color when product loads
   useEffect(() => {
@@ -56,13 +68,8 @@ export default function ProductDetailPageClient({
           result.data.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
         setCartItemCount(totalItems);
 
-        // Check if current product is in cart
-        const productInCart =
-          result.data.items?.some(
-            (item) =>
-              item.product._id === product._id || item.product.id === product.id
-          ) || false;
-        setIsInCart(productInCart);
+        // Cart data fetched successfully
+        // isInCart state is now managed by global cart state
       }
     } catch (error) {
       console.error("Error fetching cart data:", error);
@@ -119,9 +126,10 @@ export default function ProductDetailPageClient({
 
       if (result.success) {
         showSuccessToast("Item added to cart successfully");
-        // Update cart count and set product as in cart
+        // Add to local state immediately for instant UI update
+        addItemLocally(product._id || product.id);
+        // Update cart count in background
         await fetchCartData();
-        setIsInCart(true);
       } else {
         showErrorToast(result.error || "Failed to add item to cart");
       }
@@ -512,9 +520,7 @@ export default function ProductDetailPageClient({
 
                 <div className="flex gap-3">
                   <button
-                    onClick={
-                      isInCart ? () => setShowCartModal(true) : handleAddToCart
-                    }
+                    onClick={isInCart ? handleViewCart : handleAddToCart}
                     disabled={isAddingToCart || !product.inStock}
                     className={`h-12 flex-1 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 ${
                       !product.inStock

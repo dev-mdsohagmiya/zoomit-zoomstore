@@ -12,10 +12,18 @@ import CenteredCartModal from "./CenteredCartModal";
 export default function ProductCard({ product }) {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [showCartModal, setShowCartModal] = useState(false);
-  const { isProductInCart, refreshCart } = useCartState();
+  const { isProductInCart, refreshCart, addItemLocally } = useCartState();
 
   // Check if product is in cart using global state
   const isInCart = isProductInCart(product._id || product.id);
+
+  // Handle View Cart button click
+  const handleViewCart = () => {
+    // Refresh cart data to ensure we have the latest information
+    refreshCart();
+    // Open the cart modal
+    setShowCartModal(true);
+  };
 
   // Calculate prices first
   const originalPrice = product.price || 0;
@@ -66,7 +74,9 @@ export default function ProductCard({ product }) {
 
       if (result.success) {
         showSuccessToast("Item added to cart successfully");
-        // Refresh global cart state
+        // Add to local state immediately for instant UI update
+        addItemLocally(product._id || product.id);
+        // Refresh global cart state in background (without blocking UI)
         refreshCart();
       } else {
         showErrorToast(result.error || "Failed to add item to cart");
@@ -219,7 +229,7 @@ export default function ProductCard({ product }) {
 
         {/* Add to Cart / View Cart Button */}
         <button
-          onClick={isInCart ? () => setShowCartModal(true) : handleAddToCart}
+          onClick={isInCart ? handleViewCart : handleAddToCart}
           disabled={isAddingToCart || !product.inStock}
           className={`w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 flex items-center justify-center gap-2 ${
             !product.inStock

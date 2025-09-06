@@ -24,7 +24,7 @@ export default function CenteredCartModal({
   const [isUpdating, setIsUpdating] = useState({});
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const router = useRouter();
-  const { refreshCart } = useCartState();
+  const { refreshCart, removeFromCartWithUI, clearLocalState } = useCartState();
 
   // Use external state if provided, otherwise use internal state
   const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
@@ -92,7 +92,7 @@ export default function CenteredCartModal({
     setIsUpdating((prev) => ({ ...prev, [productId]: true }));
 
     try {
-      const result = await removeFromCart(productId);
+      const result = await removeFromCartWithUI(productId);
       if (result.success) {
         setCart(result.data);
         showSuccessToast("Item removed from cart");
@@ -117,7 +117,8 @@ export default function CenteredCartModal({
       if (result.success) {
         setCart(result.data);
         showSuccessToast("Cart cleared successfully");
-        // Refresh global cart state to update all product cards
+        // Clear local state and refresh global cart state
+        clearLocalState();
         refreshCart();
       } else {
         showErrorToast(result.error || "Failed to clear cart");
@@ -361,7 +362,7 @@ export default function CenteredCartModal({
                 </Dialog.Close>
                 <Link href="/checkout" className="flex-1">
                   <button className="h-12 w-full rounded-lg bg-purple-900 text-white font-semibold hover:bg-purple-800 transition-colors shadow-lg">
-                    Proceed to Checkout
+                    Proceed to Payment
                   </button>
                 </Link>
               </div>
