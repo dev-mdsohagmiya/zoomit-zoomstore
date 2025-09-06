@@ -25,7 +25,7 @@ export default async function ProductsPage({ searchParams }) {
 
   try {
     // Fetch products
-    const productsResult = await getPublicProducts(page, 12, filters);
+    const productsResult = await getPublicProducts(page, 10, filters);
     if (productsResult.success) {
       products = productsResult.data?.products || [];
       pagination = productsResult.data?.pagination || pagination;

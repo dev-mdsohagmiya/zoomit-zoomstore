@@ -34,8 +34,40 @@ export default function ProductsPageClient({
     initialPagination || { page: 1, pages: 1, total: 0 }
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [isClearingFilters, setIsClearingFilters] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const { error, handleError, clearError, executeWithErrorHandling } =
     useErrorHandler();
+
+  // Handle URL changes to sync state
+  useEffect(() => {
+    const urlSearch = searchParamsHook.get("search") || "";
+    const urlCategory = searchParamsHook.get("category") || "";
+    const urlSort = searchParamsHook.get("sort") || "";
+    const urlMinPrice = searchParamsHook.get("minPrice") || "";
+    const urlMaxPrice = searchParamsHook.get("maxPrice") || "";
+    const urlPage = parseInt(searchParamsHook.get("page")) || 1;
+
+    // Update state if URL parameters have changed
+    if (urlSearch !== searchTerm) {
+      setSearchTerm(urlSearch);
+    }
+    if (urlCategory !== selectedCategory) {
+      setSelectedCategory(urlCategory);
+    }
+    if (urlSort !== sortBy) {
+      setSortBy(urlSort);
+    }
+    if (urlMinPrice !== minPrice) {
+      setMinPrice(urlMinPrice);
+    }
+    if (urlMaxPrice !== maxPrice) {
+      setMaxPrice(urlMaxPrice);
+    }
+    if (urlPage !== currentPage) {
+      setCurrentPage(urlPage);
+    }
+  }, [searchParamsHook]);
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState(searchParams?.search || "");
@@ -43,8 +75,13 @@ export default function ProductsPageClient({
     searchParams?.category || ""
   );
   const [selectedPriceRange, setSelectedPriceRange] = useState("All Prices");
+  const [minPrice, setMinPrice] = useState(searchParams?.minPrice || "");
+  const [maxPrice, setMaxPrice] = useState(searchParams?.maxPrice || "");
   const [sortBy, setSortBy] = useState(searchParams?.sort || "");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(
+    parseInt(searchParams?.page) || 1
+  );
 
   // Update URL with search parameters
   const updateURL = (params) => {
@@ -70,6 +107,7 @@ export default function ProductsPageClient({
 
   // Handle search
   const handleSearch = async () => {
+    setCurrentPage(1);
     updateURL({
       search: searchTerm,
       category: selectedCategory,
@@ -77,13 +115,14 @@ export default function ProductsPageClient({
       page: 1,
     });
 
-    // Refresh data
-    await refreshData();
+    // Fetch data for page 1
+    await fetchDataForPage(1);
   };
 
   // Handle category change
   const handleCategoryChange = async (category) => {
     setSelectedCategory(category);
+    setCurrentPage(1);
     updateURL({
       search: searchTerm,
       category: category,
@@ -91,13 +130,14 @@ export default function ProductsPageClient({
       page: 1,
     });
 
-    // Refresh data
-    await refreshData();
+    // Fetch data for page 1
+    await fetchDataForPage(1);
   };
 
   // Handle sort change
   const handleSortChange = async (sort) => {
     setSortBy(sort);
+    setCurrentPage(1);
     updateURL({
       search: searchTerm,
       category: selectedCategory,
@@ -105,8 +145,8 @@ export default function ProductsPageClient({
       page: 1,
     });
 
-    // Refresh data
-    await refreshData();
+    // Fetch data for page 1
+    await fetchDataForPage(1);
   };
 
   // Refresh data from server
@@ -116,14 +156,19 @@ export default function ProductsPageClient({
       const currentSearch = searchParamsHook.get("search") || "";
       const currentCategory = searchParamsHook.get("category") || "";
       const currentSort = searchParamsHook.get("sort") || "";
-      const currentPage = parseInt(searchParamsHook.get("page")) || 1;
+      const pageFromURL = parseInt(searchParamsHook.get("page")) || 1;
+
+      // Update current page state if it's different from URL
+      if (pageFromURL !== currentPage) {
+        setCurrentPage(pageFromURL);
+      }
 
       const filters = {};
       if (currentSearch) filters.search = currentSearch;
       if (currentCategory) filters.category = currentCategory;
       if (currentSort) filters.sort = currentSort;
 
-      const result = await getPublicProducts(currentPage, 12, filters);
+      const result = await getPublicProducts(pageFromURL, 10, filters);
 
       if (result.success) {
         setProducts(result.data?.products || []);
@@ -143,19 +188,45 @@ export default function ProductsPageClient({
   };
 
   // Clear all filters
-  const clearFilters = () => {
-    setSearchTerm("");
-    setSelectedCategory("");
-    setSortBy("");
-    setSelectedPriceRange("All Prices");
-    updateURL({
-      search: "",
-      category: "",
-      sort: "",
-      page: 1,
-    });
-    // Fetch default products when clearing filters
-    refreshData();
+  const clearFilters = async () => {
+    console.log("Clearing filters...");
+    setIsClearingFilters(true);
+    try {
+      // Reset all state immediately
+      setSearchTerm("");
+      setSelectedCategory("");
+      setSortBy("");
+      setSelectedPriceRange("All Prices");
+      setMinPrice("");
+      setMaxPrice("");
+      setCurrentPage(1);
+
+      // Clear URL parameters
+      router.push("/products");
+
+      // Fetch fresh data for page 1 with no filters
+      console.log("Fetching fresh data...");
+      const result = await getPublicProducts(1, 10, {});
+      console.log("Clear filters result:", result);
+
+      if (result.success) {
+        setProducts(result.data?.products || []);
+        setPagination(
+          result.data?.pagination || { page: 1, pages: 1, total: 0 }
+        );
+        clearError();
+        setRefreshKey((prev) => prev + 1);
+        console.log("Filters cleared successfully");
+      } else {
+        console.error("Clear filters failed:", result.error);
+        throw new Error(result.error || "Failed to fetch products");
+      }
+    } catch (error) {
+      console.error("Error clearing filters:", error);
+      handleError(error, "Failed to clear filters. Please try again.");
+    } finally {
+      setIsClearingFilters(false);
+    }
   };
 
   // Handle key press for search
@@ -165,17 +236,80 @@ export default function ProductsPageClient({
     }
   };
 
+  // Handle page change
+  const handlePageChange = async (newPage) => {
+    if (newPage < 1 || newPage > pagination.pages) return;
+
+    // Update URL first
+    updateURL({
+      search: searchTerm,
+      category: selectedCategory,
+      sort: sortBy,
+      page: newPage,
+    });
+
+    // Update state
+    setCurrentPage(newPage);
+
+    // Fetch data with the new page
+    await fetchDataForPage(newPage);
+  };
+
+  // Fetch data for specific page
+  const fetchDataForPage = async (page) => {
+    setIsLoading(true);
+    try {
+      const currentSearch = searchParamsHook.get("search") || "";
+      const currentCategory = searchParamsHook.get("category") || "";
+      const currentSort = searchParamsHook.get("sort") || "";
+      const currentMinPrice = searchParamsHook.get("minPrice") || "";
+      const currentMaxPrice = searchParamsHook.get("maxPrice") || "";
+
+      const filters = {};
+      if (currentSearch) filters.search = currentSearch;
+      if (currentCategory) filters.category = currentCategory;
+      if (currentSort) filters.sort = currentSort;
+      if (currentMinPrice) filters.minPrice = parseFloat(currentMinPrice);
+      if (currentMaxPrice) filters.maxPrice = parseFloat(currentMaxPrice);
+
+      console.log("Fetching data for page:", { page, filters });
+
+      const result = await getPublicProducts(page, 10, filters);
+
+      console.log("API response:", result);
+
+      if (result.success) {
+        setProducts(result.data?.products || []);
+        setPagination(
+          result.data?.pagination || { page: 1, pages: 1, total: 0 }
+        );
+        clearError();
+      } else {
+        console.error("API error:", result.error);
+        throw new Error(result.error || "Failed to fetch products");
+      }
+    } catch (error) {
+      console.error("Error fetching data for page:", error);
+      handleError(error, "Failed to load products. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Get active filters count
   const getActiveFiltersCount = () => {
     let count = 0;
     if (searchTerm) count++;
     if (selectedCategory) count++;
     if (sortBy) count++;
+    if (minPrice) count++;
+    if (maxPrice) count++;
     return count;
   };
 
   return (
     <div
+      key={refreshKey}
       className="w-full min-h-screen"
       style={{ backgroundColor: "rgb(244, 234, 244)" }}
     >
@@ -270,10 +404,11 @@ export default function ProductsPageClient({
                   Filters & Sort
                 </h3>
                 <button
-                  onClick={clearFilters}
-                  className="text-xs font-medium text-purple-600 hover:text-purple-800 hover:bg-purple-50 px-2 py-1 rounded-md transition-colors"
+                  onClick={() => clearFilters()}
+                  disabled={isClearingFilters}
+                  className="text-xs font-medium text-purple-600 hover:text-purple-800 hover:bg-purple-50 px-2 py-1 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Clear all
+                  {isClearingFilters ? "Clearing..." : "Clear all"}
                 </button>
               </div>
 
@@ -401,6 +536,56 @@ export default function ProductsPageClient({
                     ))}
                   </div>
                 </div>
+
+                {/* Price Range Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-purple-800 mb-2">
+                    Price Range
+                  </label>
+                  <div className="space-y-2">
+                    <div>
+                      <label className="block text-xs text-purple-700 mb-1">
+                        Min Price (৳)
+                      </label>
+                      <input
+                        type="number"
+                        value={minPrice}
+                        onChange={(e) => setMinPrice(e.target.value)}
+                        placeholder="0"
+                        className="w-full px-3 py-2 text-xs border border-purple-200 rounded-lg focus:border-purple-500 focus:ring-1 focus:ring-purple-200 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-purple-700 mb-1">
+                        Max Price (৳)
+                      </label>
+                      <input
+                        type="number"
+                        value={maxPrice}
+                        onChange={(e) => setMaxPrice(e.target.value)}
+                        placeholder="10000"
+                        className="w-full px-3 py-2 text-xs border border-purple-200 rounded-lg focus:border-purple-500 focus:ring-1 focus:ring-purple-200 outline-none"
+                      />
+                    </div>
+                    <button
+                      onClick={async () => {
+                        setCurrentPage(1);
+                        updateURL({
+                          search: searchTerm,
+                          category: selectedCategory,
+                          sort: sortBy,
+                          minPrice: minPrice,
+                          maxPrice: maxPrice,
+                          page: 1,
+                        });
+                        await fetchDataForPage(1);
+                      }}
+                      className="w-full px-3 py-2 text-xs font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors"
+                    >
+                      Apply Price Filter
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -424,7 +609,7 @@ export default function ProductsPageClient({
 
             {/* Products Grid */}
             {isLoading ? (
-              <ProductListSkeleton count={12} />
+              <ProductListSkeleton count={10} />
             ) : error ? (
               <ErrorState
                 title="Failed to load products"
@@ -440,19 +625,159 @@ export default function ProductsPageClient({
                 message="Try adjusting your search or filter criteria"
                 action={
                   <button
-                    onClick={clearFilters}
-                    className="mt-4 bg-purple-900 text-white px-6 py-2 rounded-lg hover:bg-purple-800 transition-colors"
+                    onClick={() => clearFilters()}
+                    disabled={isClearingFilters}
+                    className="mt-4 bg-purple-900 text-white px-6 py-2 rounded-lg hover:bg-purple-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Clear Filters
+                    {isClearingFilters ? "Clearing..." : "Clear Filters"}
                   </button>
                 }
               />
             ) : (
-              <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-                {products.map((product) => (
-                  <ProductCard key={product._id} product={product} />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                  {products.map((product) => (
+                    <ProductCard key={product._id} product={product} />
+                  ))}
+                </div>
+
+                {/* Pagination Controls */}
+                {pagination.pages > 1 && (
+                  <div className="mt-8 flex items-center justify-center sm:justify-end">
+                    <div className="bg-white rounded-xl border border-purple-200 p-3 sm:p-4 shadow-lg w-full sm:w-auto sm:max-w-fit">
+                      {/* Mobile Layout */}
+                      <div className="flex flex-col gap-4 sm:hidden">
+                        {/* Page Info - Mobile */}
+                        <div className="text-center">
+                          <p className="text-sm font-medium text-purple-700">
+                            Page {currentPage} of {pagination.pages} •{" "}
+                            {pagination.total} products
+                          </p>
+                        </div>
+
+                        {/* Page Numbers - Mobile */}
+                        <div className="flex items-center justify-center gap-2">
+                          {Array.from(
+                            { length: Math.min(5, pagination.pages) },
+                            (_, i) => {
+                              let pageNum;
+                              if (pagination.pages <= 5) {
+                                pageNum = i + 1;
+                              } else if (currentPage <= 3) {
+                                pageNum = i + 1;
+                              } else if (currentPage >= pagination.pages - 2) {
+                                pageNum = pagination.pages - 4 + i;
+                              } else {
+                                pageNum = currentPage - 2 + i;
+                              }
+
+                              return (
+                                <button
+                                  key={pageNum}
+                                  onClick={() => handlePageChange(pageNum)}
+                                  className={`w-10 h-10 text-sm font-medium rounded-lg transition-colors ${
+                                    currentPage === pageNum
+                                      ? "bg-purple-600 text-white"
+                                      : "text-purple-700 bg-purple-50 border border-purple-200 hover:bg-purple-100"
+                                  }`}
+                                >
+                                  {pageNum}
+                                </button>
+                              );
+                            }
+                          )}
+                        </div>
+
+                        {/* Navigation Buttons - Mobile */}
+                        <div className="flex items-center justify-between gap-3">
+                          <button
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage <= 1}
+                            className="flex-1 px-4 py-3 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            ← Previous
+                          </button>
+                          <button
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage >= pagination.pages}
+                            className="flex-1 px-4 py-3 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            Next →
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Desktop Layout */}
+                      <div className="hidden sm:flex sm:flex-col lg:flex-row lg:items-center lg:gap-6">
+                        {/* Page Info - Desktop */}
+                        <div className="text-center lg:text-left mb-2 lg:mb-0">
+                          <p className="text-sm font-medium text-purple-700">
+                            Page {currentPage} of {pagination.pages} •{" "}
+                            {pagination.total} products
+                          </p>
+                        </div>
+
+                        {/* Navigation Controls - Desktop */}
+                        <div className="flex items-center gap-2">
+                          {/* Previous Button */}
+                          <button
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage <= 1}
+                            className="px-3 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            Previous
+                          </button>
+
+                          {/* Page Numbers */}
+                          <div className="flex items-center gap-1">
+                            {Array.from(
+                              { length: Math.min(5, pagination.pages) },
+                              (_, i) => {
+                                let pageNum;
+                                if (pagination.pages <= 5) {
+                                  pageNum = i + 1;
+                                } else if (currentPage <= 3) {
+                                  pageNum = i + 1;
+                                } else if (
+                                  currentPage >=
+                                  pagination.pages - 2
+                                ) {
+                                  pageNum = pagination.pages - 4 + i;
+                                } else {
+                                  pageNum = currentPage - 2 + i;
+                                }
+
+                                return (
+                                  <button
+                                    key={pageNum}
+                                    onClick={() => handlePageChange(pageNum)}
+                                    className={`w-10 h-10 text-sm font-medium rounded-lg transition-colors ${
+                                      currentPage === pageNum
+                                        ? "bg-purple-600 text-white"
+                                        : "text-purple-700 bg-purple-50 border border-purple-200 hover:bg-purple-100"
+                                    }`}
+                                  >
+                                    {pageNum}
+                                  </button>
+                                );
+                              }
+                            )}
+                          </div>
+
+                          {/* Next Button */}
+                          <button
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage >= pagination.pages}
+                            className="px-3 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            Next
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
