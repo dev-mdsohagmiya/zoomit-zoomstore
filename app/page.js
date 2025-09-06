@@ -31,8 +31,32 @@ export default async function HomePage() {
 
     // Get a random product for hero section
     if (featuredProducts.length > 0) {
-      const randomIndex = Math.floor(Math.random() * featuredProducts.length);
-      heroProduct = featuredProducts[randomIndex];
+      // Try to find a product with a valid price first
+      const productsWithPrice = featuredProducts.filter(
+        (product) => product.price && product.price > 0
+      );
+
+      if (productsWithPrice.length > 0) {
+        const randomIndex = Math.floor(
+          Math.random() * productsWithPrice.length
+        );
+        heroProduct = productsWithPrice[randomIndex];
+      } else {
+        // Fallback to any product if none have valid prices
+        const randomIndex = Math.floor(Math.random() * featuredProducts.length);
+        heroProduct = featuredProducts[randomIndex];
+      }
+
+      // Debug logging
+      console.log("🎯 Selected hero product:", {
+        name: heroProduct?.name,
+        price: heroProduct?.price,
+        discount: heroProduct?.discount,
+        id: heroProduct?._id,
+        hasPrice: !!heroProduct?.price,
+        priceType: typeof heroProduct?.price,
+        discountType: typeof heroProduct?.discount,
+      });
     }
   } catch (error) {
     console.error("Error fetching home page data:", error);

@@ -242,23 +242,50 @@ export default function HeroSection({ heroProduct }) {
                               : heroProduct.name}
                           </div>
                           <div className="text-xs text-slate-600">
-                            ৳{heroProduct.price?.toLocaleString()} • ⭐⭐⭐⭐⭐
-                            ({heroProduct.numReviews || 0})
+                            ৳
+                            {heroProduct.price && heroProduct.price > 0
+                              ? heroProduct.price.toLocaleString()
+                              : "Price not available"}{" "}
+                            • ⭐⭐⭐⭐⭐ ({heroProduct.numReviews || 0})
                           </div>
                         </div>
                         <div className="text-right">
                           <div className="text-sm font-bold text-purple-900">
-                            ৳{heroProduct.price?.toLocaleString()}
+                            ৳
+                            {heroProduct.price && heroProduct.price > 0
+                              ? heroProduct.price.toLocaleString()
+                              : "N/A"}
                           </div>
-                          {heroProduct.discount && heroProduct.discount > 0 && (
-                            <div className="text-xs text-slate-500 line-through">
-                              ৳
-                              {Math.round(
-                                heroProduct.price /
-                                  (1 - heroProduct.discount / 100)
-                              ).toLocaleString()}
-                            </div>
-                          )}
+                          {(() => {
+                            console.log("🔍 Discount debug:", {
+                              discount: heroProduct.discount,
+                              discountType: typeof heroProduct.discount,
+                              hasDiscount: !!heroProduct.discount,
+                              isDiscountGreaterThanZero:
+                                heroProduct.discount > 0,
+                              price: heroProduct.price,
+                              shouldShowDiscount:
+                                heroProduct.discount !== undefined &&
+                                heroProduct.discount !== null &&
+                                heroProduct.discount > 0 &&
+                                heroProduct.price &&
+                                heroProduct.price > 0,
+                            });
+                            return null;
+                          })()}
+                          {heroProduct.discount !== undefined &&
+                            heroProduct.discount !== null &&
+                            heroProduct.discount > 0 &&
+                            heroProduct.price &&
+                            heroProduct.price > 0 && (
+                              <div className="text-xs text-slate-500 line-through">
+                                ৳
+                                {Math.round(
+                                  heroProduct.price /
+                                    (1 - heroProduct.discount / 100)
+                                ).toLocaleString()}
+                              </div>
+                            )}
                         </div>
                       </div>
                     </div>
