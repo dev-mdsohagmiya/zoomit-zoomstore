@@ -16,29 +16,57 @@ export default function CheckoutAuthWrapper() {
     const loadCartData = async () => {
       try {
         const isUserAuthenticated = isAuthenticated();
+        console.log(
+          "CheckoutAuthWrapper - isAuthenticated:",
+          isUserAuthenticated
+        );
 
         if (!isUserAuthenticated) {
-          // Guest user - check if they have items in guest cart
-          const guestCart = JSON.parse(
-            localStorage.getItem("guestCart") || "[]"
+          // Guest user - check if they have items in local cart
+          let localCart = JSON.parse(localStorage.getItem("localCart") || "[]");
+
+          // Fallback: check for guestCart for backward compatibility
+          if (localCart.length === 0) {
+            localCart = JSON.parse(localStorage.getItem("guestCart") || "[]");
+          }
+
+          console.log("CheckoutAuthWrapper - localCart:", localCart);
+          console.log(
+            "CheckoutAuthWrapper - localCart length:",
+            localCart.length
+          );
+          console.log(
+            "CheckoutAuthWrapper - localCart type:",
+            typeof localCart
           );
 
-          if (guestCart.length === 0) {
-            // No items in guest cart, redirect to products
+          if (!localCart || localCart.length === 0) {
+            // No items in local cart, redirect to products
+            console.log(
+              "CheckoutAuthWrapper - No items in cart, redirecting to products"
+            );
             router.push("/products");
             return;
           }
 
-          // Store guest cart data for checkout
-          setCart({ items: guestCart });
+          // Store local cart data for checkout
+          setCart({ items: localCart });
           setIsLoading(false);
           return;
         }
 
         // Authenticated user - fetch from API
+        console.log(
+          "CheckoutAuthWrapper - Fetching cart for authenticated user"
+        );
         const cartResult = await getCart();
+        console.log("CheckoutAuthWrapper - Cart result:", cartResult);
 
         if (!cartResult.success) {
+          console.log(
+            "CheckoutAuthWrapper - Cart fetch failed:",
+            cartResult.error
+          );
           setError(cartResult.error);
           setIsLoading(false);
           return;
@@ -50,10 +78,16 @@ export default function CheckoutAuthWrapper() {
           cartResult.data.items.length === 0
         ) {
           // Empty cart, redirect to products
+          console.log(
+            "CheckoutAuthWrapper - Empty cart for authenticated user, redirecting to products"
+          );
           router.push("/products");
           return;
         }
 
+        console.log(
+          "CheckoutAuthWrapper - Cart loaded successfully for authenticated user"
+        );
         setCart(cartResult.data);
         setIsLoading(false);
       } catch (error) {
