@@ -11,7 +11,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { truncateText } from "../../../lib/utils";
-import { addToCart, getCart } from "../../../app/actions/cart";
+import { addToCart } from "../../../app/actions/cart";
 import { showSuccessToast, showErrorToast } from "../../../lib/toast-utils";
 import { isAuthenticated } from "../../../lib/auth-utils";
 import { useCartState } from "../../../lib/hooks/useCartState";
@@ -27,7 +27,6 @@ export default function ProductDetailPageClient({
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
-  const [cartItemCount, setCartItemCount] = useState(0);
   const [showCartModal, setShowCartModal] = useState(false);
   const { isProductInCart, addItemLocally, refreshCart } = useCartState();
 
@@ -36,9 +35,7 @@ export default function ProductDetailPageClient({
 
   // Handle View Cart button click
   const handleViewCart = () => {
-    // Refresh cart data to ensure we have the latest information
-    refreshCart();
-    // Open the cart modal
+    // Open the cart modal directly - local state is already up to date
     setShowCartModal(true);
   };
 
@@ -57,29 +54,7 @@ export default function ProductDetailPageClient({
     }
   }, [product, selectedSize, selectedColor]);
 
-  // Fetch cart data to get item count and check if current product is in cart
-  const fetchCartData = async () => {
-    if (!isAuthenticated()) return;
-
-    try {
-      const result = await getCart();
-      if (result.success && result.data) {
-        const totalItems =
-          result.data.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
-        setCartItemCount(totalItems);
-
-        // Cart data fetched successfully
-        // isInCart state is now managed by global cart state
-      }
-    } catch (error) {
-      console.error("Error fetching cart data:", error);
-    }
-  };
-
-  // Load cart data on component mount
-  useEffect(() => {
-    fetchCartData();
-  }, []);
+  // Cart data is now managed by global state - no need for local fetching
 
   // Calculate discount
   const hasDiscount = product.discount && product.discount > 0;
@@ -128,8 +103,7 @@ export default function ProductDetailPageClient({
         showSuccessToast("Item added to cart successfully");
         // Add to local state immediately for instant UI update
         addItemLocally(product._id || product.id);
-        // Update cart count in background
-        await fetchCartData();
+        // No need to fetch cart data - local state handles UI
       } else {
         showErrorToast(result.error || "Failed to add item to cart");
       }

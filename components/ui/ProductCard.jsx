@@ -19,9 +19,7 @@ export default function ProductCard({ product }) {
 
   // Handle View Cart button click
   const handleViewCart = () => {
-    // Refresh cart data to ensure we have the latest information
-    refreshCart();
-    // Open the cart modal
+    // Open the cart modal directly - local state is already up to date
     setShowCartModal(true);
   };
 
@@ -76,8 +74,7 @@ export default function ProductCard({ product }) {
         showSuccessToast("Item added to cart successfully");
         // Add to local state immediately for instant UI update
         addItemLocally(product._id || product.id);
-        // Refresh global cart state in background (without blocking UI)
-        refreshCart();
+        // No need to refresh cart immediately - local state handles UI
       } else {
         showErrorToast(result.error || "Failed to add item to cart");
       }

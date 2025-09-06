@@ -15,6 +15,7 @@ import {
   Shield,
 } from "lucide-react";
 import CartModal from "./CartModal";
+import { useCartState } from "../../lib/hooks/useCartState";
 import {
   isAuthenticated,
   getUserRole,
@@ -30,6 +31,18 @@ export default function Navbar() {
   const [isLoading, setIsLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
+  // Get cart state for item count
+  const { cartItems, refreshCart } = useCartState();
+  const totalItems =
+    cartItems?.reduce((total, item) => total + item.quantity, 0) || 0;
+
+  // Cart state is now optimized for performance
+
+  // Refresh cart when component mounts
+  useEffect(() => {
+    refreshCart();
+  }, [refreshCart]);
 
   const linkClass = (href) =>
     `px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -112,9 +125,14 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             <CartModal
               trigger={
-                <button className="inline-flex items-center gap-2 rounded-md border border-purple-300 px-3 py-2 text-sm font-medium text-purple-900 hover:bg-purple-50 transition-colors">
+                <button className="relative inline-flex items-center gap-2 rounded-md border border-purple-300 px-3 py-2 text-sm font-medium text-purple-900 hover:bg-purple-50 transition-colors">
                   <ShoppingCart className="h-4 w-4" />
                   Cart
+                  {totalItems > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold shadow-lg border-2 border-white">
+                      {totalItems > 99 ? "99+" : totalItems}
+                    </span>
+                  )}
                 </button>
               }
             />
@@ -174,9 +192,14 @@ export default function Navbar() {
           <div className="md:hidden flex items-center gap-3">
             <CartModal
               trigger={
-                <button className="inline-flex items-center gap-2 rounded-lg border border-purple-300 px-3 py-2 text-sm font-medium text-purple-900 hover:bg-purple-50 transition-colors">
+                <button className="relative inline-flex items-center gap-2 rounded-lg border border-purple-300 px-3 py-2 text-sm font-medium text-purple-900 hover:bg-purple-50 transition-colors">
                   <ShoppingCart className="h-4 w-4" />
                   <span className="hidden xs:inline">Cart</span>
+                  {totalItems > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold shadow-lg border-2 border-white">
+                      {totalItems > 99 ? "99+" : totalItems}
+                    </span>
+                  )}
                 </button>
               }
             />
