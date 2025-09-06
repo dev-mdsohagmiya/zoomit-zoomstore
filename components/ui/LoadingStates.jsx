@@ -107,11 +107,37 @@ export function InlineLoading({ message = "Loading..." }) {
 
 export function PageLoading() {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-white flex items-center justify-center">
       <div className="text-center">
+        {/* Logo */}
+        <div className="mb-6 animate-pulse">
+          <img
+            src="/logo.png"
+            alt="Zoomit Logo"
+            className="w-16 h-16 mx-auto object-contain"
+          />
+        </div>
+
         <LoadingSpinner size="xl" className="mx-auto mb-4" />
-        <h2 className="text-lg font-semibold text-gray-900 mb-2">Loading...</h2>
-        <p className="text-gray-600">Please wait while we load your content</p>
+        <h2 className="text-xl font-semibold text-purple-900 mb-2">
+          Loading...
+        </h2>
+        <p className="text-purple-600 mb-6">
+          Please wait while we load your content
+        </p>
+
+        {/* Loading Dots */}
+        <div className="flex justify-center items-center space-x-2">
+          <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce"></div>
+          <div
+            className="w-2 h-2 bg-purple-600 rounded-full animate-bounce"
+            style={{ animationDelay: "0.1s" }}
+          ></div>
+          <div
+            className="w-2 h-2 bg-purple-600 rounded-full animate-bounce"
+            style={{ animationDelay: "0.2s" }}
+          ></div>
+        </div>
       </div>
     </div>
   );
