@@ -2,8 +2,7 @@
 
 import { cookies } from "next/headers";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Get all users with pagination and filtering (Admin/SuperAdmin)
 export async function getAllUsersByAdminAndSuperAdmin(
@@ -12,7 +11,7 @@ export async function getAllUsersByAdminAndSuperAdmin(
   filters = {}
 ) {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const token = cookieStore.get("accessToken")?.value;
 
     console.log("Access token found:", !!token);
@@ -101,7 +100,7 @@ export async function getAllUsersByAdminAndSuperAdmin(
 // Create a new user (Admin/SuperAdmin - using /users endpoint)
 export async function createUserByAdminAndSuperAdmin(userData) {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const token = cookieStore.get("accessToken")?.value;
 
     if (!token) {
@@ -175,7 +174,7 @@ export async function createUserByAdminAndSuperAdmin(userData) {
 // Update user (Admin/SuperAdmin - using /users/:id endpoint)
 export async function updateUserByAdminAndSuperAdmin(userId, userData) {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const token = cookieStore.get("accessToken")?.value;
 
     if (!token) {
@@ -250,7 +249,7 @@ export async function updateUserByAdminAndSuperAdmin(userId, userData) {
 // Delete user (Admin/SuperAdmin - using /users/:id endpoint)
 export async function deleteUserByAdminAndSuperAdmin(userId) {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const token = cookieStore.get("accessToken")?.value;
 
     if (!token) {
@@ -322,7 +321,7 @@ export async function deleteUserByAdminAndSuperAdmin(userId) {
 // Get current user profile
 export async function getUserProfile() {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const token = cookieStore.get("accessToken")?.value;
 
     if (!token) {
@@ -366,7 +365,7 @@ export async function getUserProfile() {
 // Create admin (Super Admin only - using /admin/create endpoint)
 export async function createAdminBySuperAdmin(adminData) {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const token = cookieStore.get("accessToken")?.value;
 
     if (!token) {

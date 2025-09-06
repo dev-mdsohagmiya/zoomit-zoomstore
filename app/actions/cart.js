@@ -2,19 +2,18 @@
 
 import { cookies } from "next/headers";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Helper function to get auth token from cookies
-function getAuthToken() {
-  const cookieStore = cookies();
+async function getAuthToken() {
+  const cookieStore = await cookies();
   return cookieStore.get("accessToken")?.value;
 }
 
 // Get user's cart
 export async function getCart() {
   try {
-    const token = getAuthToken();
+    const token = await getAuthToken();
 
     if (!token) {
       return {
@@ -30,6 +29,11 @@ export async function getCart() {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
+    }).catch((error) => {
+      console.error("Network error fetching cart:", error);
+      throw new Error(
+        "Unable to connect to server. Please check your internet connection."
+      );
     });
 
     const result = await response.json();
@@ -106,7 +110,7 @@ export async function addToCart(
   selectedColor = null
 ) {
   try {
-    const token = getAuthToken();
+    const token = await getAuthToken();
 
     if (!token) {
       return {
@@ -171,7 +175,7 @@ export async function updateCartItem(
   selectedColor = null
 ) {
   try {
-    const token = getAuthToken();
+    const token = await getAuthToken();
 
     if (!token) {
       return {
@@ -231,7 +235,7 @@ export async function updateCartItem(
 // Remove item from cart
 export async function removeFromCart(productId) {
   try {
-    const token = getAuthToken();
+    const token = await getAuthToken();
 
     if (!token) {
       return {
@@ -277,7 +281,7 @@ export async function removeFromCart(productId) {
 // Clear entire cart
 export async function clearCart() {
   try {
-    const token = getAuthToken();
+    const token = await getAuthToken();
 
     if (!token) {
       return {
@@ -323,7 +327,7 @@ export async function clearCart() {
 // Get cart summary
 export async function getCartSummary() {
   try {
-    const token = getAuthToken();
+    const token = await getAuthToken();
 
     if (!token) {
       return {

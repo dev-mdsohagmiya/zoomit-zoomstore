@@ -1,11 +1,11 @@
 "use server";
 
-const BASE_URL = "http://localhost:8000/api/v1";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Get all categories (server-side)
 export async function getCategories() {
   try {
-    const response = await fetch(`${BASE_URL}/categories`, {
+    const response = await fetch(`${API_BASE_URL}/categories`, {
       method: "GET",
       cache: "no-store", // Ensure fresh data
     });
@@ -49,7 +49,7 @@ export async function createCategory(formData, token) {
 
     console.log("Creating category with FormData:", formData);
 
-    const response = await fetch(`${BASE_URL}/categories`, {
+    const response = await fetch(`${API_BASE_URL}/categories`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -93,7 +93,7 @@ export async function updateCategory(categoryId, formData, token) {
 
     console.log("Updating category with FormData:", formData);
 
-    const response = await fetch(`${BASE_URL}/categories/${categoryId}`, {
+    const response = await fetch(`${API_BASE_URL}/categories/${categoryId}`, {
       method: "PUT",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -137,7 +137,7 @@ export async function deleteCategory(categoryId, token) {
 
     console.log("Deleting category:", categoryId);
 
-    const response = await fetch(`${BASE_URL}/categories/${categoryId}`, {
+    const response = await fetch(`${API_BASE_URL}/categories/${categoryId}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,

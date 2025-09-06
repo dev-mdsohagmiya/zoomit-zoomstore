@@ -41,6 +41,7 @@ export default function Navbar() {
   console.log("Navbar - Cart items:", cartItems);
   console.log("Navbar - Total items:", totalItems);
   console.log("Navbar - Loading state:", isLoading);
+  console.log("Navbar - Should show badge:", totalItems > 0);
 
   // Refresh cart when component mounts
   useEffect(() => {
@@ -144,7 +145,7 @@ export default function Navbar() {
                   <ShoppingCart className="h-4 w-4" />
                   Cart
                   {totalItems > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold shadow-lg border-2 border-white">
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold shadow-lg border-2 border-white z-20 min-w-[24px] min-h-[24px] animate-pulse">
                       {totalItems > 99 ? "99+" : totalItems}
                     </span>
                   )}
@@ -211,7 +212,7 @@ export default function Navbar() {
                   <ShoppingCart className="h-4 w-4" />
                   <span className="hidden xs:inline">Cart</span>
                   {totalItems > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold shadow-lg border-2 border-white">
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold shadow-lg border-2 border-white z-20 min-w-[24px] min-h-[24px] animate-pulse">
                       {totalItems > 99 ? "99+" : totalItems}
                     </span>
                   )}

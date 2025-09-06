@@ -2,12 +2,11 @@
 
 import { cookies } from "next/headers";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Get auth token from cookies
-const getAuthToken = () => {
-  const cookieStore = cookies();
+const getAuthToken = async () => {
+  const cookieStore = await cookies();
   return cookieStore.get("accessToken")?.value;
 };
 
@@ -29,7 +28,7 @@ export async function createOrderWithPayment(orderData) {
       });
     }
 
-    const token = getAuthToken();
+    const token = await getAuthToken();
     if (!token) {
       return {
         success: false,
@@ -161,7 +160,7 @@ export async function createOrder(orderData) {
   try {
     console.log("createOrder called with:", orderData);
 
-    const token = getAuthToken();
+    const token = await getAuthToken();
     if (!token) {
       return {
         success: false,
@@ -245,7 +244,7 @@ export async function createOrder(orderData) {
 // Get User's Orders
 export async function getUserOrders(page = 1, limit = 10) {
   try {
-    const token = getAuthToken();
+    const token = await getAuthToken();
     if (!token) {
       return {
         success: false,
@@ -297,7 +296,7 @@ export async function getUserOrders(page = 1, limit = 10) {
 // Get Order by ID
 export async function getOrderById(orderId) {
   try {
-    const token = getAuthToken();
+    const token = await getAuthToken();
     if (!token) {
       return {
         success: false,
@@ -346,7 +345,7 @@ export async function getOrderById(orderId) {
 // Get Order Status
 export async function getOrderStatus(orderId) {
   try {
-    const token = getAuthToken();
+    const token = await getAuthToken();
     if (!token) {
       return {
         success: false,
@@ -395,7 +394,7 @@ export async function getOrderStatus(orderId) {
 // Confirm Payment
 export async function confirmPayment(paymentId) {
   try {
-    const token = getAuthToken();
+    const token = await getAuthToken();
     if (!token) {
       return {
         success: false,
@@ -448,7 +447,7 @@ export async function confirmPayment(paymentId) {
 // Get Payment Details
 export async function getPaymentDetails(paymentId) {
   try {
-    const token = getAuthToken();
+    const token = await getAuthToken();
     if (!token) {
       return {
         success: false,

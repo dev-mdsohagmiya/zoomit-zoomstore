@@ -1,6 +1,6 @@
 "use server";
 
-const BASE_URL = "http://localhost:8000/api/v1";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Get all products (server-side)
 export async function getProducts(page = 1, limit = 10, filters = {}) {
@@ -28,7 +28,7 @@ export async function getProducts(page = 1, limit = 10, filters = {}) {
       params.append("sort", filters.sort);
     }
 
-    const response = await fetch(`${BASE_URL}/products?${params}`, {
+    const response = await fetch(`${API_BASE_URL}/products?${params}`, {
       method: "GET",
       cache: "no-store", // Ensure fresh data
     });
@@ -82,7 +82,7 @@ export async function getProducts(page = 1, limit = 10, filters = {}) {
 // Get all categories for product form (server-side)
 export async function getCategories() {
   try {
-    const response = await fetch(`${BASE_URL}/categories`, {
+    const response = await fetch(`${API_BASE_URL}/categories`, {
       method: "GET",
       cache: "no-store",
     });
@@ -167,7 +167,7 @@ export async function createProduct(formData, token) {
     }
     console.log("FormData keys:", formDataKeys);
 
-    const response = await fetch(`${BASE_URL}/products`, {
+    const response = await fetch(`${API_BASE_URL}/products`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -273,7 +273,7 @@ export async function updateProduct(productId, formData, token) {
     }
     console.log(`Total photos in Update FormData: ${photoCount}`);
 
-    const response = await fetch(`${BASE_URL}/products/${productId}`, {
+    const response = await fetch(`${API_BASE_URL}/products/${productId}`, {
       method: "PUT",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -345,7 +345,7 @@ export async function deleteProduct(productId, token) {
 
     console.log("Deleting product:", productId);
 
-    const response = await fetch(`${BASE_URL}/products/${productId}`, {
+    const response = await fetch(`${API_BASE_URL}/products/${productId}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,

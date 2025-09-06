@@ -2,19 +2,18 @@
 
 import { cookies } from "next/headers";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Get auth token from cookies
-const getAuthToken = () => {
-  const cookieStore = cookies();
+const getAuthToken = async () => {
+  const cookieStore = await cookies();
   return cookieStore.get("accessToken")?.value;
 };
 
 // Get all user carts (Admin only)
 export async function getAllUserCarts(page = 1, limit = 10, search = "") {
   try {
-    const token = getAuthToken();
+    const token = await getAuthToken();
     if (!token) {
       return {
         success: false,
@@ -72,7 +71,7 @@ export async function getUserCart(userId) {
       `${API_BASE_URL}/cart/admin/user/${userId}`
     );
 
-    const token = getAuthToken();
+    const token = await getAuthToken();
     console.log("getUserCart - Token present:", !!token);
 
     if (!token) {
@@ -125,7 +124,7 @@ export async function getUserCart(userId) {
 // Remove item from user's cart (Admin only)
 export async function removeItemFromUserCart(userId, productId) {
   try {
-    const token = getAuthToken();
+    const token = await getAuthToken();
     if (!token) {
       return {
         success: false,
@@ -168,7 +167,7 @@ export async function removeItemFromUserCart(userId, productId) {
 // Clear user's cart (Admin only)
 export async function clearUserCart(userId) {
   try {
-    const token = getAuthToken();
+    const token = await getAuthToken();
     if (!token) {
       return {
         success: false,
@@ -211,7 +210,7 @@ export async function clearUserCart(userId) {
 // Update user's cart item quantity (Admin only)
 export async function updateUserCartItemQuantity(userId, productId, quantity) {
   try {
-    const token = getAuthToken();
+    const token = await getAuthToken();
     if (!token) {
       return {
         success: false,

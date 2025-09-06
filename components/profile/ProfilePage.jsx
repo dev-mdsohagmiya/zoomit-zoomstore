@@ -84,14 +84,17 @@ const updateUserProfileAPI = async (formData, token) => {
       console.log(`${key}:`, value);
     }
 
-    const response = await fetch("http://localhost:8000/api/v1/users/profile", {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        // Don't set Content-Type for FormData, let browser set it with boundary
-      },
-      body: data,
-    });
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/users/profile`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          // Don't set Content-Type for FormData, let browser set it with boundary
+        },
+        body: data,
+      }
+    );
 
     console.log("Response status:", response.status);
     console.log("Response ok:", response.ok);
