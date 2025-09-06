@@ -39,6 +39,13 @@ export default function CheckoutPageClient({ cart }) {
   const [currentStep, setCurrentStep] = useState(1); // 1: Form, 2: Processing, 3: Success
   const [retryCount, setRetryCount] = useState(0);
 
+  // Scroll to top when success step is reached
+  useEffect(() => {
+    if (currentStep === 3) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [currentStep]);
+
   const router = useRouter();
 
   // Debug cart data on component mount (remove in production)
@@ -339,6 +346,8 @@ export default function CheckoutPageClient({ cart }) {
         // For cash on delivery, no payment processing needed
         if (formData.paymentMethod === "cash") {
           setCurrentStep(3); // Move directly to success step
+          // Scroll to top immediately when success step is reached
+          window.scrollTo({ top: 0, behavior: "smooth" });
           showSuccessToast(
             "Order placed successfully! You will pay on delivery."
           );
@@ -362,6 +371,8 @@ export default function CheckoutPageClient({ cart }) {
           // For card payments, the backend should handle the payment processing
           // If we get here, the payment was successful
           setCurrentStep(3); // Move to success step
+          // Scroll to top immediately when success step is reached
+          window.scrollTo({ top: 0, behavior: "smooth" });
           showSuccessToast("Order placed successfully! Payment confirmed.");
 
           // Clear cart after successful order

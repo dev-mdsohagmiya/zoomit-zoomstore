@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ProductCard from "../../components/ui/ProductCard";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, X } from "lucide-react";
 import { getPublicProducts } from "../actions/public";
 import { useErrorHandler } from "../../lib/hooks/useErrorHandler";
 import {
@@ -92,7 +92,8 @@ export default function ProductsPageClient({
         value &&
         value !== "" &&
         value !== "All Categories" &&
-        value !== "All Prices"
+        value !== "All Prices" &&
+        value !== undefined
       ) {
         current.set(key, value);
       } else {
@@ -106,17 +107,33 @@ export default function ProductsPageClient({
   };
 
   // Handle search
-  const handleSearch = async () => {
+  const handleSearch = async (searchValue = null) => {
+    const termToSearch = searchValue !== null ? searchValue : searchTerm;
+    console.log("Search triggered with term:", termToSearch);
+    console.log("Current searchTerm state:", searchTerm);
+    console.log("Passed searchValue:", searchValue);
     setCurrentPage(1);
+
+    // If search term is empty, clear the search filter
+    const trimmedSearch = termToSearch.trim();
+    console.log("Trimmed search:", trimmedSearch);
+
+    // Update URL
     updateURL({
-      search: searchTerm,
+      search: trimmedSearch || undefined, // Send undefined if empty to clear the filter
       category: selectedCategory,
       sort: sortBy,
       page: 1,
     });
 
-    // Fetch data for page 1
-    await fetchDataForPage(1);
+    // Fetch data directly with the search parameters instead of reading from URL
+    await fetchDataWithFilters(1, {
+      search: trimmedSearch || undefined,
+      category: selectedCategory,
+      sort: sortBy,
+      minPrice: minPrice,
+      maxPrice: maxPrice,
+    });
   };
 
   // Handle category change
@@ -164,7 +181,8 @@ export default function ProductsPageClient({
       }
 
       const filters = {};
-      if (currentSearch) filters.search = currentSearch;
+      if (currentSearch && currentSearch.trim())
+        filters.search = currentSearch.trim();
       if (currentCategory) filters.category = currentCategory;
       if (currentSort) filters.sort = currentSort;
 
@@ -232,7 +250,7 @@ export default function ProductsPageClient({
   // Handle key press for search
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
-      handleSearch();
+      handleSearch(e.target.value);
     }
   };
 
@@ -255,7 +273,51 @@ export default function ProductsPageClient({
     await fetchDataForPage(newPage);
   };
 
-  // Fetch data for specific page
+  // Fetch data with direct filter parameters
+  const fetchDataWithFilters = async (page, filters = {}) => {
+    setIsLoading(true);
+    try {
+      // Clean up filters - only include non-empty values
+      const cleanFilters = {};
+      if (filters.search && filters.search.trim())
+        cleanFilters.search = filters.search.trim();
+      if (filters.category) cleanFilters.category = filters.category;
+      if (filters.sort) cleanFilters.sort = filters.sort;
+      if (filters.minPrice)
+        cleanFilters.minPrice = parseFloat(filters.minPrice);
+      if (filters.maxPrice)
+        cleanFilters.maxPrice = parseFloat(filters.maxPrice);
+
+      console.log(
+        "Fetching data for page:",
+        page,
+        "with clean filters:",
+        cleanFilters
+      );
+
+      const result = await getPublicProducts(page, 10, cleanFilters);
+
+      console.log("API response:", result);
+
+      if (result.success) {
+        setProducts(result.data?.products || []);
+        setPagination(
+          result.data?.pagination || { page: 1, pages: 1, total: 0 }
+        );
+        clearError();
+      } else {
+        console.error("API error:", result.error);
+        throw new Error(result.error || "Failed to fetch products");
+      }
+    } catch (error) {
+      console.error("Error fetching data with filters:", error);
+      handleError(error, "Failed to load products. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch data for specific page (reads from URL)
   const fetchDataForPage = async (page) => {
     setIsLoading(true);
     try {
@@ -266,13 +328,14 @@ export default function ProductsPageClient({
       const currentMaxPrice = searchParamsHook.get("maxPrice") || "";
 
       const filters = {};
-      if (currentSearch) filters.search = currentSearch;
+      if (currentSearch && currentSearch.trim())
+        filters.search = currentSearch.trim();
       if (currentCategory) filters.category = currentCategory;
       if (currentSort) filters.sort = currentSort;
       if (currentMinPrice) filters.minPrice = parseFloat(currentMinPrice);
       if (currentMaxPrice) filters.maxPrice = parseFloat(currentMaxPrice);
 
-      console.log("Fetching data for page:", { page, filters });
+      console.log("Fetching data for page:", page, "with filters:", filters);
 
       const result = await getPublicProducts(page, 10, filters);
 
@@ -594,16 +657,35 @@ export default function ProductsPageClient({
           <div className="flex-1 min-w-0">
             {/* Search Bar */}
             <div className="bg-white rounded-xl border border-purple-200 p-3 sm:p-4 shadow-lg mb-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-purple-500" />
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  className="w-full pl-9 pr-3 py-2.5 text-sm border-2 border-purple-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-100 outline-none text-purple-900 placeholder-purple-400 transition-all duration-300"
-                />
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-purple-500" />
+                  <input
+                    type="text"
+                    placeholder="Search products..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    className="w-full pl-9 pr-10 py-2.5 text-sm border-2 border-purple-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-100 outline-none text-purple-900 placeholder-purple-400 transition-all duration-300"
+                  />
+                  {searchTerm && (
+                    <button
+                      onClick={() => {
+                        setSearchTerm("");
+                        handleSearch("");
+                      }}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+                <button
+                  onClick={() => handleSearch(searchTerm)}
+                  className="px-4 py-2.5 bg-purple-900 text-white rounded-lg hover:bg-purple-800 transition-colors text-sm font-medium"
+                >
+                  Search
+                </button>
               </div>
             </div>
 

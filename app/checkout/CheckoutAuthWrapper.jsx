@@ -39,12 +39,19 @@ export default function CheckoutAuthWrapper() {
             "CheckoutAuthWrapper - localCart type:",
             typeof localCart
           );
+          console.log(
+            "CheckoutAuthWrapper - localStorage keys:",
+            Object.keys(localStorage)
+          );
 
           if (!localCart || localCart.length === 0) {
             // No items in local cart, redirect to products
             console.log(
               "CheckoutAuthWrapper - No items in cart, redirecting to products"
             );
+            console.log("CheckoutAuthWrapper - Available localStorage data:");
+            console.log("- localCart:", localStorage.getItem("localCart"));
+            console.log("- guestCart:", localStorage.getItem("guestCart"));
             router.push("/products");
             return;
           }
