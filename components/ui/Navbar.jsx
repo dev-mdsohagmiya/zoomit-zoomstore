@@ -37,12 +37,16 @@ export default function Navbar() {
   const totalItems =
     cartItems?.reduce((total, item) => total + item.quantity, 0) || 0;
 
-  // Cart state is now optimized for performance
+  // Debug: Log cart state
+  console.log("Navbar - Cart items:", cartItems);
+  console.log("Navbar - Total items:", totalItems);
+  console.log("Navbar - Loading state:", isLoading);
 
   // Refresh cart when component mounts
   useEffect(() => {
+    console.log("Navbar - Refreshing cart...");
     refreshCart();
-  }, [refreshCart]);
+  }, []); // Remove refreshCart from dependencies to avoid infinite loop
 
   const linkClass = (href) =>
     `px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -73,17 +77,27 @@ export default function Navbar() {
   useEffect(() => {
     // Check authentication status on component mount
     const checkAuthStatus = () => {
-      const authenticated = isAuthenticated();
-      const role = getUserRole();
-      const userData = getStoredUser();
+      try {
+        const authenticated = isAuthenticated();
+        const role = getUserRole();
+        const userData = getStoredUser();
 
-      setIsLoggedIn(authenticated);
-      setUserRole(role);
-      setUser(userData);
-      setIsLoading(false);
+        setIsLoggedIn(authenticated);
+        setUserRole(role);
+        setUser(userData);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error checking auth status:", error);
+        setIsLoading(false); // Set loading to false even if there's an error
+      }
     };
 
     checkAuthStatus();
+
+    // Fallback timeout to ensure loading state is cleared
+    const timeout = setTimeout(() => {
+      setIsLoading(false);
+    }, 3000);
 
     // Listen for storage changes (when user logs in/out in another tab)
     const handleStorageChange = () => {
@@ -93,6 +107,7 @@ export default function Navbar() {
     window.addEventListener("storage", handleStorageChange);
 
     return () => {
+      clearTimeout(timeout);
       window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
