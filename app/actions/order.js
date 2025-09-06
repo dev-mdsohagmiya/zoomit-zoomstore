@@ -60,7 +60,7 @@ export async function createOrderWithPayment(orderData) {
     const requestBody = {
       items: orderData.items,
       shippingAddress: orderData.shippingAddress,
-      paymentMethod: orderData.paymentMethod || "card",
+      paymentType: orderData.paymentMethod || "card", // Backend expects paymentType, not paymentMethod
     };
 
     // Add card details if payment method is card
@@ -78,7 +78,7 @@ export async function createOrderWithPayment(orderData) {
       };
     } else if (orderData.paymentMethod === "cash") {
       // For cash on delivery, no additional details needed
-      requestBody.paymentMethod = "cash";
+      requestBody.paymentType = "cash";
     }
 
     if (process.env.NODE_ENV === "development") {
