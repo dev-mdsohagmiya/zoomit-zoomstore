@@ -346,9 +346,11 @@ export default function CheckoutPageClient({ cart }) {
           // Clear cart after successful order
           try {
             await clearCart();
-            // Refresh cart state in the global context
+            // Force refresh cart state in the global context
             if (typeof window !== "undefined") {
               window.dispatchEvent(new CustomEvent("cartCleared"));
+              // Also dispatch a more specific event for immediate UI update
+              window.dispatchEvent(new CustomEvent("cartForceRefresh"));
             }
           } catch (error) {
             console.error("Error clearing cart:", error);
@@ -365,9 +367,11 @@ export default function CheckoutPageClient({ cart }) {
           // Clear cart after successful order
           try {
             await clearCart();
-            // Refresh cart state in the global context
+            // Force refresh cart state in the global context
             if (typeof window !== "undefined") {
               window.dispatchEvent(new CustomEvent("cartCleared"));
+              // Also dispatch a more specific event for immediate UI update
+              window.dispatchEvent(new CustomEvent("cartForceRefresh"));
             }
           } catch (error) {
             console.error("Error clearing cart:", error);

@@ -12,10 +12,16 @@ import CenteredCartModal from "./CenteredCartModal";
 export default function ProductCard({ product }) {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [showCartModal, setShowCartModal] = useState(false);
-  const { isProductInCart, refreshCart, addItemLocally } = useCartState();
+  const { isProductInCart, refreshCart, addItemLocally, cartItems, cacheKey } =
+    useCartState();
 
   // Check if product is in cart using global state
   const isInCart = isProductInCart(product._id || product.id);
+
+  // Force re-render when cart items or cache key change
+  useEffect(() => {
+    // This will trigger a re-render when cartItems or cacheKey change
+  }, [cartItems, cacheKey]);
 
   // Handle View Cart button click
   const handleViewCart = () => {
